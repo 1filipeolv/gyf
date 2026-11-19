@@ -9,7 +9,7 @@ import BarChart from '../components/BarChart';
 import { useDashboard } from '../hooks/useDashboard';
 import { RootStackParamList } from '../navigation/types';
 import { SITE_LABELS } from '../constants/measurements';
-import { activitySummary, measurementDeltas, streakWeeks, weeklyVolume, weightSummary } from '../utils/dashboard';
+import { activitySummary, measurementDeltas, nutritionSummary, streakWeeks, weeklyVolume, weightSummary } from '../utils/dashboard';
 import { countPRs, fmtKg } from '../utils/stats';
 import { addDays, formatDateBR, toDateKey } from '../utils/date';
 import { photoUri } from '../services/photos';
@@ -46,6 +46,7 @@ export default function ProgressScreen() {
   }, [workouts, weights, measurements, photos, profile]);
 
   const act = useMemo(() => activitySummary(activities, dailyLogs), [activities, dailyLogs]);
+  const nut = useMemo(() => nutritionSummary(dailyLogs), [dailyLogs]);
 
   const Link = ({ icon, title, to }: { icon: keyof typeof Ionicons.glyphMap; title: string; to: keyof RootStackParamList }) => (
     <Pressable onPress={() => nav.navigate(to as never)} style={styles.link}>
@@ -152,6 +153,13 @@ export default function ProgressScreen() {
           <Kpi label="Atividades (sem.)" value={String(act.weekCount)} flat />
         </Pressable>
 
+        <Text style={styles.section}>Alimentação e água</Text>
+        <Pressable onPress={() => nav.navigate('Nutrition')} style={[styles.card, styles.row]}>
+          <Kpi label="Kcal (média 7d)" value={nut.kcalAvg === null ? '—' : nut.kcalAvg.toLocaleString('pt-BR')} flat />
+          <Kpi label="Proteína g (7d)" value={nut.proteinAvg === null ? '—' : String(nut.proteinAvg)} flat />
+          <Kpi label="Água hoje" value={`${fmt(nut.todayMl / 1000)} L`} flat />
+        </Pressable>
+
         <Text style={styles.section}>Registrar</Text>
         <View style={styles.links}>
           <Link icon="scale-outline" title="Peso" to="Weight" />
@@ -161,6 +169,10 @@ export default function ProgressScreen() {
         <View style={[styles.links, { marginTop: spacing.sm }]}>
           <Link icon="walk-outline" title="Atividades" to="Activities" />
           <Link icon="moon-outline" title="Passos e sono" to="DailyLog" />
+        </View>
+        <View style={[styles.links, { marginTop: spacing.sm }]}>
+          <Link icon="restaurant-outline" title="Alimentação" to="Nutrition" />
+          <Link icon="water-outline" title="Água" to="Water" />
         </View>
         <View style={{ height: spacing.xl }} />
       </ScrollView>

@@ -22,6 +22,8 @@ export type RootStackParamList = {
   Calendar: undefined;
   Activities: undefined;
   DailyLog: undefined;
+  Nutrition: undefined;
+  Water: undefined;
   AnalysisHistory: undefined;
   AnalysisDetail: { analysis: Analysis };
 };

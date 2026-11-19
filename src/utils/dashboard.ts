@@ -79,3 +79,15 @@ export function activitySummary(activities: Activity[], logs: DailyLog[], today:
     weekMinutes: week.reduce((a, x) => a + x.durationMin, 0),
   };
 }
+
+export function nutritionSummary(logs: DailyLog[], today: string = toDateKey()) {
+  const from7 = addDays(today, -6);
+  const l7 = logs.filter((l) => l.date >= from7 && l.date <= today);
+  const pick = (f: (l: DailyLog) => number | undefined) => l7.map(f).filter((v): v is number => !!v);
+  return {
+    kcalAvg: avgOf(pick((l) => l.kcal), 0),
+    proteinAvg: avgOf(pick((l) => l.proteinG), 0),
+    waterAvg: avgOf(pick((l) => l.waterMl), 0),
+    todayMl: logs.find((l) => l.date === today)?.waterMl ?? 0,
+  };
+}

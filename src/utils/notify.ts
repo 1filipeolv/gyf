@@ -98,3 +98,50 @@ export async function ensureNotificationPermission(): Promise<boolean> {
     return false;
   }
 }
+
+const FOOD_ID = 'food-log-reminder';
+const WATER_PREFIX = 'water-';
+const WATER_CHANNEL = 'water';
+
+export const scheduleFoodReminder = (hour: number) =>
+  enqueue(async () => {
+    await Notifications.cancelScheduledNotificationAsync(FOOD_ID).catch(() => {});
+    await Notifications.scheduleNotificationAsync({
+      identifier: FOOD_ID,
+      content: { title: 'Alimentação do dia', body: 'Registre as kcal e os macros de hoje.' },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour,
+        minute: 0,
+        channelId: REMINDER_CHANNEL,
+      },
+    });
+  });
+
+export const cancelFoodReminder = () =>
+  enqueue(async () => {
+    await Notifications.cancelScheduledNotificationAsync(FOOD_ID).catch(() => {});
+  });
+
+export const replaceWaterReminders = (dates: Date[]) =>
+  enqueue(async () => {
+    await initNotifications();
+    const all = await Notifications.getAllScheduledNotificationsAsync();
+    for (const n of all) {
+      if (n.identifier.startsWith(WATER_PREFIX)) await Notifications.cancelScheduledNotificationAsync(n.identifier);
+    }
+    if (!dates.length) return;
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync(WATER_CHANNEL, {
+        name: 'Água',
+        importance: Notifications.AndroidImportance.DEFAULT,
+      });
+    }
+    for (const date of dates) {
+      await Notifications.scheduleNotificationAsync({
+        identifier: WATER_PREFIX + date.getTime(),
+        content: { title: 'Hora de beber água', body: 'Beba um copo de água.' },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date, channelId: WATER_CHANNEL },
+      });
+    }
+  });

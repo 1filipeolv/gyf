@@ -155,6 +155,34 @@ export function buildInput(d: DashData, photoIds: string[]) {
           ultimos14Dias: dailyRecent,
         };
 
+  const foodLogs = logs.filter((l) => l.kcal);
+  const waterLogs = logs.filter((l) => l.waterMl);
+  const nums = (list: typeof logs, f: (l: (typeof logs)[number]) => number | undefined) =>
+    list.map(f).filter((v): v is number => !!v);
+  const foodRecent = foodLogs
+    .filter((l) => l.date >= addDays(today, -13))
+    .map((l) => ({
+      data: l.date,
+      kcal: l.kcal,
+      ...(l.proteinG ? { proteinaG: l.proteinG } : {}),
+      ...(l.carbG ? { carboidratoG: l.carbG } : {}),
+      ...(l.fatG ? { gorduraG: l.fatG } : {}),
+    }));
+  const alimentacaoEAgua =
+    foodLogs.length + waterLogs.length === 0
+      ? 'sem registros'
+      : {
+          observacao: 'valores digitados pelo usuário, calculados por outra IA: são estimativas',
+          diasComAlimentacao: foodLogs.length,
+          mediaKcalPorDia: avgVals(nums(foodLogs, (l) => l.kcal), 0) ?? 'sem registros',
+          mediaProteinaG: avgVals(nums(foodLogs, (l) => l.proteinG), 0) ?? 'sem registros',
+          mediaCarboidratoG: avgVals(nums(foodLogs, (l) => l.carbG), 0) ?? 'sem registros',
+          mediaGorduraG: avgVals(nums(foodLogs, (l) => l.fatG), 0) ?? 'sem registros',
+          ultimos14Dias: foodRecent,
+          diasComAgua: waterLogs.length,
+          mediaAguaMl: avgVals(nums(waterLogs, (l) => l.waterMl), 0) ?? 'sem registros',
+        };
+
   const p = d.profile;
   const age = p?.birthDate
     ? Math.floor((Date.now() - fromDateKey(p.birthDate).getTime()) / 31557600000)
@@ -184,6 +212,7 @@ export function buildInput(d: DashData, photoIds: string[]) {
     medidasCm: measurements,
     atividadesCardio: cardio,
     passosESono,
+    alimentacaoEAgua,
   };
 
   const summary: AnalysisInputSummary = {

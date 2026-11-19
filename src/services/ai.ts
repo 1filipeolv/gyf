@@ -18,7 +18,7 @@ Regras:
 - Fotos: descreva apenas o que é visível (proporções, simetria, postura, definição aparente). Não estime percentual de gordura nem faça diagnóstico. Considere que luz, pose e câmera afetam a comparação.
 - Seja específico e acionável. Ordene recomendações por prioridade. Pontos fortes e fracos devem citar números dos dados.
 - Não prescreva dieta detalhada, suplementos ou medicamentos. Se houver sinais de comportamento alimentar de risco, ou perda de peso muito rápida, recomende acompanhamento profissional.
-- Atividades cardio, passos e sono: use apenas o que estiver presente nos dados; se vier "sem registros", não conclua nada sobre esse item. As kcal de atividades são estimativas por MET (salvo origem manual) e os passos podem se sobrepor às atividades: não some os dois sem avisar e não trate como medição exata.\n- Calorias só se houver dados suficientes (peso, altura, sexo, idade); caso contrário omita calorieTargetKcal e explique.`;
+- Atividades cardio, passos e sono: use apenas o que estiver presente nos dados; se vier "sem registros", não conclua nada sobre esse item. As kcal de atividades são estimativas por MET (salvo origem manual) e os passos podem se sobrepor às atividades: não some os dois sem avisar e não trate como medição exata.\n- Alimentação e água (alimentacaoEAgua): kcal e macros são digitados pelo usuário a partir de outra IA, logo são estimativas; use só como tendência, não some com o gasto de atividades como se fosse exato, e se vier \"sem registros\" não conclua nada. Dias sem registro não significam jejum.\n- Calorias só se houver dados suficientes (peso, altura, sexo, idade); caso contrário omita calorieTargetKcal e explique.`;
 
 const finding = {
   type: 'object',

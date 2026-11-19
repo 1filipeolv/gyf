@@ -136,10 +136,21 @@ export async function exportCsv(uid: string, kind: CsvKind) {
   } else if (kind === 'dailyLogs') {
     const list = (await listDocs<DailyLog>(uid, 'dailyLogs')).sort((a, b) => a.date.localeCompare(b.date));
     csv = toCsv(
-      ['Data', 'Passos', 'Sono (h)', 'Qualidade do sono (1-5)'],
-      list.map((l) => [formatDateBR(l.date), l.steps, l.sleepHours, l.sleepQuality])
+      ['Data', 'Passos', 'Sono (h)', 'Qualidade do sono (1-5)', 'Kcal', 'Proteína (g)', 'Carboidrato (g)', 'Gordura (g)', 'Água (ml)', 'Alimentação'],
+      list.map((l) => [
+        formatDateBR(l.date),
+        l.steps,
+        l.sleepHours,
+        l.sleepQuality,
+        l.kcal,
+        l.proteinG,
+        l.carbG,
+        l.fatG,
+        l.waterMl,
+        l.foodNotes,
+      ])
     );
-    name = 'passos-sono';
+    name = 'registro-diario';
   } else {
     const list = (await listDocs<Measurement>(uid, 'measurements')).sort((a, b) => a.date.localeCompare(b.date));
     csv = toCsv(

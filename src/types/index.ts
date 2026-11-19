@@ -247,4 +247,9 @@ export type DailyLog = Timestamped & {
   sleepHours?: number;
   sleepQuality?: number;
   waterMl?: number;
+  kcal?: number;
+  proteinG?: number;
+  carbG?: number;
+  fatG?: number;
+  foodNotes?: string;
 };
