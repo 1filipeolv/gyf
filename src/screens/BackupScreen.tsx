@@ -71,7 +71,7 @@ export default function BackupScreen() {
               await dash.reload();
               Alert.alert(
                 'Backup restaurado',
-                `Treinos: ${r.workouts}\nPeso: ${r.bodyWeights}\nMedições: ${r.measurements}\nRotinas: ${r.routines}\nExercícios: ${r.exercises}\nFotos: ${r.progressPhotos} (${r.photos} arquivos)\nAnálises: ${r.analyses}`
+                `Treinos: ${r.workouts}\nPeso: ${r.bodyWeights}\nMedições: ${r.measurements}\nRotinas: ${r.routines}\nExercícios: ${r.exercises}\nFotos: ${r.progressPhotos} (${r.photos} arquivos)\nAnálises: ${r.analyses}\nPresenças: ${r.attendance ?? 0}`
               );
             }),
         },

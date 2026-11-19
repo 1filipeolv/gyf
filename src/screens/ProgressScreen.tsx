@@ -68,6 +68,15 @@ export default function ProgressScreen() {
           <Kpi label="PRs em 30d" value={String(d.prs30)} />
         </View>
 
+        <Pressable onPress={() => nav.navigate('Calendar')} style={styles.calLink}>
+          <Ionicons name="calendar-outline" size={24} color={colors.primary} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.calTitle}>Frequência</Text>
+            <Text style={styles.calHint}>Calendário mensal de treinos e presença</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+        </Pressable>
+
         <Text style={styles.section}>Volume semanal</Text>
         <View style={styles.card}>
           {workouts.length ? <BarChart data={d.vol} /> : <Text style={styles.empty}>Sem treinos.</Text>}
@@ -177,6 +186,18 @@ const styles = StyleSheet.create({
   photos: { flexDirection: 'row', gap: spacing.sm },
   ph: { flex: 1 },
   img: { width: '100%', aspectRatio: 0.72, borderRadius: radius.sm, backgroundColor: colors.bg },
+  calLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    minHeight: 60,
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginTop: spacing.md,
+  },
+  calTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  calHint: { color: colors.muted, fontSize: 13, marginTop: 2 },
   links: { flexDirection: 'row', gap: spacing.sm },
   link: {
     flex: 1,

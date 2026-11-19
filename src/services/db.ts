@@ -21,7 +21,8 @@ export type CollectionName =
   | 'bodyWeights'
   | 'measurements'
   | 'progressPhotos'
-  | 'analyses';
+  | 'analyses'
+  | 'attendance';
 
 export const userRef = (uid: string) => doc(db, 'users', uid);
 

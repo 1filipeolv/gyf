@@ -19,6 +19,7 @@ import PhotoCompareScreen from '../screens/PhotoCompareScreen';
 import AnalysisHistoryScreen from '../screens/AnalysisHistoryScreen';
 import AnalysisDetailScreen from '../screens/AnalysisDetailScreen';
 import BackupScreen from '../screens/BackupScreen';
+import CalendarScreen from '../screens/CalendarScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -62,6 +63,7 @@ export default function RootNavigator() {
           <Stack.Screen name="Photos" component={PhotosScreen} options={{ headerShown: true, title: 'Fotos' }} />
           <Stack.Screen name="PhotoCompare" component={PhotoCompareScreen} options={{ headerShown: true, title: 'Comparar' }} />
           <Stack.Screen name="Backup" component={BackupScreen} options={{ headerShown: true, title: 'Dados e backup' }} />
+          <Stack.Screen name="Calendar" component={CalendarScreen} options={{ headerShown: true, title: 'Frequência' }} />
           <Stack.Screen name="AnalysisHistory" component={AnalysisHistoryScreen} options={{ headerShown: true, title: 'Análises anteriores' }} />
           <Stack.Screen name="AnalysisDetail" component={AnalysisDetailScreen} options={{ headerShown: true, title: 'Análise' }} />
         </Stack.Navigator>

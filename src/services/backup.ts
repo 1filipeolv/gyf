@@ -19,6 +19,7 @@ const COLLECTIONS: CollectionName[] = [
   'measurements',
   'progressPhotos',
   'analyses',
+  'attendance',
 ];
 
 const PROFILE_FIELDS: (keyof UserProfile)[] = [

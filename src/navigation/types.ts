@@ -19,6 +19,7 @@ export type RootStackParamList = {
   Photos: undefined;
   PhotoCompare: undefined;
   Backup: undefined;
+  Calendar: undefined;
   AnalysisHistory: undefined;
   AnalysisDetail: { analysis: Analysis };
 };

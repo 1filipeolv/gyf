@@ -30,6 +30,8 @@ export type Equipment =
 
 export type SetType = 'normal' | 'warmup' | 'dropset' | 'failure';
 
+export type ActivityType = 'strength' | 'run' | 'swim' | 'walk' | 'bike' | 'other';
+
 export type PhotoAngle = 'front' | 'side' | 'back';
 
 export type MeasurementSite =
@@ -217,3 +219,9 @@ export type Analysis = Timestamped & {
 };
 
 export type NewDoc<T extends Timestamped> = Omit<T, 'id' | 'createdAt' | 'updatedAt'>;
+
+export type Attendance = Timestamped & {
+  date: string;
+  type: ActivityType;
+  note?: string;
+};
