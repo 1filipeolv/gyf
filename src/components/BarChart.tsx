@@ -4,9 +4,9 @@ import Svg, { Rect, Text as SvgText } from 'react-native-svg';
 import { colors } from '../theme';
 
 type Bar = { label: string; value: number };
-type Props = { data: Bar[]; height?: number };
+type Props = { data: Bar[]; height?: number; format?: (v: number) => string };
 
-export default function BarChart({ data, height = 140 }: Props) {
+export default function BarChart({ data, height = 140, format }: Props) {
   const [w, setW] = useState(0);
   const onLayout = (e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width);
   if (!w || !data.length) return <View style={{ height }} onLayout={onLayout} />;
@@ -34,7 +34,13 @@ export default function BarChart({ data, height = 140 }: Props) {
                 fill={last ? colors.primary : colors.border}
               />
               <SvgText x={x + bw / 2} y={ih - h - 4} fill={colors.muted} fontSize={10} textAnchor="middle">
-                {d.value > 0 ? (d.value >= 1000 ? `${(d.value / 1000).toFixed(1)}t` : Math.round(d.value)) : ''}
+                {d.value > 0
+                  ? format
+                    ? format(d.value)
+                    : d.value >= 1000
+                      ? `${(d.value / 1000).toFixed(1)}t`
+                      : Math.round(d.value)
+                  : ''}
               </SvgText>
               <SvgText x={x + bw / 2} y={height - 6} fill={colors.muted} fontSize={10} textAnchor="middle">
                 {d.label}

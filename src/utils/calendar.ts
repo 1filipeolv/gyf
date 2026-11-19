@@ -1,4 +1,4 @@
-import { ActivityType, Attendance, Workout } from '../types';
+import { Activity, ActivityType, Attendance, Workout } from '../types';
 import { addDays, fromDateKey, toDateKey } from './date';
 
 export const MONTH_NAMES = [
@@ -58,13 +58,14 @@ export function buildMonthGrid(m: MonthRef): (string | null)[][] {
 export type DayInfo = {
   workouts: Workout[];
   attendance?: Attendance;
+  activities: Activity[];
   types: ActivityType[];
 };
 
-export function buildDayMap(workouts: Workout[], attendance: Attendance[]) {
+export function buildDayMap(workouts: Workout[], attendance: Attendance[], activities: Activity[] = []) {
   const map = new Map<string, DayInfo>();
   const get = (date: string) => {
-    const cur = map.get(date) ?? { workouts: [], types: [] };
+    const cur = map.get(date) ?? { workouts: [], activities: [], types: [] };
     map.set(date, cur);
     return cur;
   };
@@ -81,6 +82,11 @@ export function buildDayMap(workouts: Workout[], attendance: Attendance[]) {
     d.attendance = a;
     addType(d, a.type);
   });
+  activities.forEach((a) => {
+    const d = get(a.date);
+    d.activities.push(a);
+    addType(d, a.type);
+  });
   map.forEach((d) => d.workouts.sort((a, b) => a.startedAt - b.startedAt));
   return map;
 }
@@ -90,11 +96,12 @@ export function monthStats(m: MonthRef, days: Map<string, DayInfo>, today: strin
   const end = monthEnd(m);
   const keys = [...days.keys()].filter((k) => k >= start && k <= end);
   const workouts = keys.reduce((a, k) => a + (days.get(k)?.workouts.length ?? 0), 0);
+  const activities = keys.reduce((a, k) => a + (days.get(k)?.activities.length ?? 0), 0);
   const activeDays = keys.length;
   const lastDay = today < start ? null : today > end ? end : today;
   const elapsed = lastDay ? Number(lastDay.split('-')[2]) : 0;
   const perWeek = elapsed > 0 ? Math.round((activeDays / (elapsed / 7)) * 10) / 10 : null;
-  return { workouts, activeDays, perWeek };
+  return { workouts, activities, activeDays, perWeek };
 }
 
 export function streakDays(active: Set<string>, today: string) {

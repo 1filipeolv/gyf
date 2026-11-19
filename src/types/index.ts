@@ -202,6 +202,8 @@ export type AnalysisInputSummary = {
   workoutsCount: number;
   weightEntries: number;
   measurementEntries: number;
+  activitiesCount?: number;
+  dailyLogsCount?: number;
   photoIds: string[];
 };
 
@@ -224,4 +226,25 @@ export type Attendance = Timestamped & {
   date: string;
   type: ActivityType;
   note?: string;
+};
+
+export type CardioType = Exclude<ActivityType, 'strength'>;
+
+export type Activity = Timestamped & {
+  date: string;
+  type: CardioType;
+  durationMin: number;
+  distanceKm?: number;
+  avgHr?: number;
+  kcal: number;
+  kcalSource: 'estimated' | 'manual';
+  notes?: string;
+};
+
+export type DailyLog = Timestamped & {
+  date: string;
+  steps?: number;
+  sleepHours?: number;
+  sleepQuality?: number;
+  waterMl?: number;
 };

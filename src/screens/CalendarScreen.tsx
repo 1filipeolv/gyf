@@ -7,7 +7,10 @@ import Button from '../components/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { getProfile, listByDateRange } from '../services/db';
 import { listAttendance, removeAttendance, saveAttendance } from '../services/attendance';
-import { Attendance, Workout } from '../types';
+import { Activity, Attendance, Workout } from '../types';
+import { listActivitiesRange } from '../services/activities';
+import { getLatestWeightKg } from '../services/weights';
+import { paceText, workoutKcal } from '../utils/energy';
 import { RootStackParamList } from '../navigation/types';
 import { ACTIVITY_COLORS, ACTIVITY_ICONS, ACTIVITY_LABELS } from '../constants/activities';
 import {
@@ -42,6 +45,8 @@ export default function CalendarScreen() {
   const [selected, setSelected] = useState<string | null>(today);
   const [monthWorkouts, setMonthWorkouts] = useState<Workout[]>([]);
   const [monthAttendance, setMonthAttendance] = useState<Attendance[]>([]);
+  const [monthActivities, setMonthActivities] = useState<Activity[]>([]);
+  const [weightKg, setWeightKg] = useState<number | null>(null);
   const [recentActive, setRecentActive] = useState<Set<string>>(new Set());
   const [target, setTarget] = useState(3);
   const [loading, setLoading] = useState(true);
@@ -51,12 +56,14 @@ export default function CalendarScreen() {
     async (m: typeof month) => {
       if (!user) return;
       try {
-        const [w, a] = await Promise.all([
+        const [w, a, c] = await Promise.all([
           listByDateRange<Workout>(user.uid, 'workouts', monthStart(m), monthEnd(m)),
           listAttendance(user.uid, monthStart(m), monthEnd(m)),
+          listActivitiesRange(user.uid, monthStart(m), monthEnd(m)),
         ]);
         setMonthWorkouts(w);
         setMonthAttendance(a);
+        setMonthActivities(c);
       } catch {
         toast.error('Não foi possível carregar o mês');
       } finally {
@@ -70,13 +77,16 @@ export default function CalendarScreen() {
     if (!user) return;
     try {
       const from = addDays(today, -RECENT_DAYS);
-      const [w, a, p] = await Promise.all([
+      const [w, a, c, p, kg] = await Promise.all([
         listByDateRange<Workout>(user.uid, 'workouts', from, today),
         listAttendance(user.uid, from, today),
+        listActivitiesRange(user.uid, from, today),
         getProfile(user.uid),
+        getLatestWeightKg(user.uid),
       ]);
-      setRecentActive(new Set([...w.map((x) => x.date), ...a.map((x) => x.date)]));
+      setRecentActive(new Set([...w.map((x) => x.date), ...a.map((x) => x.date), ...c.map((x) => x.date)]));
       setTarget(p?.weeklyFrequencyTarget ?? 3);
+      setWeightKg(kg);
     } catch {}
   }, [user, today]);
 
@@ -87,7 +97,7 @@ export default function CalendarScreen() {
     }, [loadMonth, loadRecent, month])
   );
 
-  const days = useMemo(() => buildDayMap(monthWorkouts, monthAttendance), [monthWorkouts, monthAttendance]);
+  const days = useMemo(() => buildDayMap(monthWorkouts, monthAttendance, monthActivities), [monthWorkouts, monthAttendance, monthActivities]);
   const grid = useMemo(() => buildMonthGrid(month), [month]);
   const stats = useMemo(() => monthStats(month, days, today), [month, days, today]);
   const dayStreak = useMemo(() => streakDays(recentActive, today), [recentActive, today]);
@@ -216,14 +226,15 @@ export default function CalendarScreen() {
 
       <View style={styles.stats}>
         <Stat label="Treinos" value={String(stats.workouts)} />
+        <Stat label="Atividades" value={String(stats.activities)} />
         <Stat label="Dias ativos" value={String(stats.activeDays)} />
+      </View>
+      <View style={styles.stats}>
         <Stat
           label={`Média/sem (meta ${target})`}
           value={stats.perWeek === null ? '—' : String(stats.perWeek).replace('.', ',')}
           ok={stats.perWeek !== null ? stats.perWeek >= target : undefined}
         />
-      </View>
-      <View style={styles.stats}>
         <Stat label="Sequência (dias)" value={String(dayStreak)} />
         <Stat label="Sequência (semanas)" value={String(weekStreak)} />
       </View>
@@ -242,11 +253,36 @@ export default function CalendarScreen() {
             <Text style={styles.itemTitle}>{w.name}</Text>
             <Text style={styles.itemMeta}>
               {formatDuration(w.durationSec)} · {fmtKg(w.totalVolumeKg)} · {w.totalSets} séries
+              {weightKg ? ` · ~${workoutKcal(w.durationSec, weightKg)} kcal (est.)` : ''}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.muted} />
         </Pressable>
       ))}
+      {info?.activities.map((a) => {
+        const pace = paceText(a.type, a.durationMin, a.distanceKm);
+        const dist = a.distanceKm
+          ? a.type === 'swim'
+            ? `${Math.round(a.distanceKm * 1000)} m`
+            : `${a.distanceKm.toFixed(2).replace('.', ',')} km`
+          : null;
+        return (
+          <Pressable key={a.id} onPress={() => nav.navigate('Activities')} style={styles.item}>
+            <View style={[styles.itemIcon, { backgroundColor: ACTIVITY_COLORS[a.type] }]}>
+              <Ionicons name={ACTIVITY_ICONS[a.type]} size={20} color={colors.text} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.itemTitle}>{ACTIVITY_LABELS[a.type]}</Text>
+              <Text style={styles.itemMeta}>
+                {[`${a.durationMin} min`, dist, pace, a.kcalSource === 'manual' ? `${a.kcal} kcal` : `~${a.kcal} kcal (est.)`]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+          </Pressable>
+        );
+      })}
       {info?.attendance && (
         <View style={styles.item}>
           <View style={[styles.itemIcon, { backgroundColor: ACTIVITY_COLORS[info.attendance.type] }]}>

@@ -71,7 +71,7 @@ export default function BackupScreen() {
               await dash.reload();
               Alert.alert(
                 'Backup restaurado',
-                `Treinos: ${r.workouts}\nPeso: ${r.bodyWeights}\nMedições: ${r.measurements}\nRotinas: ${r.routines}\nExercícios: ${r.exercises}\nFotos: ${r.progressPhotos} (${r.photos} arquivos)\nAnálises: ${r.analyses}\nPresenças: ${r.attendance ?? 0}`
+                `Treinos: ${r.workouts}\nPeso: ${r.bodyWeights}\nMedições: ${r.measurements}\nRotinas: ${r.routines}\nExercícios: ${r.exercises}\nFotos: ${r.progressPhotos} (${r.photos} arquivos)\nAnálises: ${r.analyses}\nPresenças: ${r.attendance ?? 0}\nAtividades: ${r.activities ?? 0}\nPassos e sono: ${r.dailyLogs ?? 0}`
               );
             }),
         },
@@ -126,6 +126,8 @@ export default function BackupScreen() {
       <Row icon="barbell-outline" title="Treinos (CSV)" hint="Uma linha por série." busy={busy === 'workouts'} disabled={off} onPress={() => csv('workouts')} />
       <Row icon="speedometer-outline" title="Peso corporal (CSV)" hint="Data, peso e % de gordura." busy={busy === 'weights'} disabled={off} onPress={() => csv('weights')} />
       <Row icon="resize-outline" title="Medições (CSV)" hint="Uma coluna por local." busy={busy === 'measurements'} disabled={off} onPress={() => csv('measurements')} />
+      <Row icon="walk-outline" title="Atividades (CSV)" hint="Corrida, natação, caminhada e bicicleta, com ritmo e kcal." busy={busy === 'activities'} disabled={off} onPress={() => csv('activities')} />
+      <Row icon="moon-outline" title="Passos e sono (CSV)" hint="Um registro por dia." busy={busy === 'dailyLogs'} disabled={off} onPress={() => csv('dailyLogs')} />
     </ScrollView>
   );
 }

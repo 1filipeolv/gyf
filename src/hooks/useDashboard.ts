@@ -6,7 +6,10 @@ import { listWorkouts } from '../services/workouts';
 import { listWeights } from '../services/weights';
 import { listMeasurements } from '../services/measurements';
 import { listPhotos } from '../services/photos';
-import { BodyWeight, Measurement, ProgressPhoto, UserProfile, Workout } from '../types';
+import { listActivitiesRange } from '../services/activities';
+import { listDailyLogs } from '../services/dailyLogs';
+import { addDays, toDateKey } from '../utils/date';
+import { Activity, BodyWeight, DailyLog, Measurement, ProgressPhoto, UserProfile, Workout } from '../types';
 
 export type DashData = {
   profile: UserProfile | null;
@@ -14,9 +17,11 @@ export type DashData = {
   weights: BodyWeight[];
   measurements: Measurement[];
   photos: ProgressPhoto[];
+  activities: Activity[];
+  dailyLogs: DailyLog[];
 };
 
-const empty: DashData = { profile: null, workouts: [], weights: [], measurements: [], photos: [] };
+const empty: DashData = { profile: null, workouts: [], weights: [], measurements: [], photos: [], activities: [], dailyLogs: [] };
 
 export function useDashboard() {
   const { user } = useAuth();
@@ -26,14 +31,18 @@ export function useDashboard() {
   const load = useCallback(async () => {
     if (!user) return;
     try {
-      const [profile, workouts, weights, measurements, photos] = await Promise.all([
+      const today = toDateKey();
+      const from = addDays(today, -90);
+      const [profile, workouts, weights, measurements, photos, activities, dailyLogs] = await Promise.all([
         getProfile(user.uid),
         listWorkouts(user.uid),
         listWeights(user.uid),
         listMeasurements(user.uid),
         listPhotos(user.uid),
+        listActivitiesRange(user.uid, from, today),
+        listDailyLogs(user.uid, from, today),
       ]);
-      setData({ profile, workouts, weights, measurements, photos });
+      setData({ profile, workouts, weights, measurements, photos, activities, dailyLogs });
     } catch {
     } finally {
       setLoading(false);

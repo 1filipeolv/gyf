@@ -1,4 +1,4 @@
-import { BodyWeight, Measurement, Workout } from '../types';
+import { Activity, BodyWeight, DailyLog, Measurement, Workout } from '../types';
 import { addDays, fromDateKey, toDateKey } from './date';
 import { movingAvg, toPts, weeklyRate } from './trend';
 
@@ -55,4 +55,27 @@ export function measurementDeltas(list: Measurement[]) {
     out.push({ site: s, first, last, diff: last - first });
   });
   return out.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
+}
+
+const avgOf = (vals: number[], digits: number) => {
+  if (!vals.length) return null;
+  const f = 10 ** digits;
+  return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * f) / f;
+};
+
+export function activitySummary(activities: Activity[], logs: DailyLog[], today: string = toDateKey()) {
+  const from7 = addDays(today, -6);
+  const l7 = logs.filter((l) => l.date >= from7 && l.date <= today);
+  const steps = l7.filter((l) => l.steps).map((l) => l.steps as number);
+  const sleep = l7.filter((l) => l.sleepHours).map((l) => l.sleepHours as number);
+  const monday = addDays(today, -((fromDateKey(today).getDay() + 6) % 7));
+  const week = activities.filter((a) => a.date >= monday && a.date <= today);
+  return {
+    stepsAvg: avgOf(steps, 0),
+    stepsDays: steps.length,
+    sleepAvg: avgOf(sleep, 1),
+    sleepDays: sleep.length,
+    weekCount: week.length,
+    weekMinutes: week.reduce((a, x) => a + x.durationMin, 0),
+  };
 }

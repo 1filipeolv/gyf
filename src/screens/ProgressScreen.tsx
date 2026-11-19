@@ -9,7 +9,7 @@ import BarChart from '../components/BarChart';
 import { useDashboard } from '../hooks/useDashboard';
 import { RootStackParamList } from '../navigation/types';
 import { SITE_LABELS } from '../constants/measurements';
-import { measurementDeltas, streakWeeks, weeklyVolume, weightSummary } from '../utils/dashboard';
+import { activitySummary, measurementDeltas, streakWeeks, weeklyVolume, weightSummary } from '../utils/dashboard';
 import { countPRs, fmtKg } from '../utils/stats';
 import { addDays, formatDateBR, toDateKey } from '../utils/date';
 import { photoUri } from '../services/photos';
@@ -22,7 +22,7 @@ const sign = (v: number) => (v > 0 ? '+' : '');
 
 export default function ProgressScreen() {
   const nav = useNavigation<Nav>();
-  const { profile, workouts, weights, measurements, photos, loading } = useDashboard();
+  const { profile, workouts, weights, measurements, photos, activities, dailyLogs, loading } = useDashboard();
 
   const d = useMemo(() => {
     const vol = weeklyVolume(workouts, 8);
@@ -44,6 +44,8 @@ export default function ProgressScreen() {
       lastWorkout: workouts[0],
     };
   }, [workouts, weights, measurements, photos, profile]);
+
+  const act = useMemo(() => activitySummary(activities, dailyLogs), [activities, dailyLogs]);
 
   const Link = ({ icon, title, to }: { icon: keyof typeof Ionicons.glyphMap; title: string; to: keyof RootStackParamList }) => (
     <Pressable onPress={() => nav.navigate(to as never)} style={styles.link}>
@@ -143,11 +145,22 @@ export default function ProgressScreen() {
           )}
         </Pressable>
 
+        <Text style={styles.section}>Atividade e sono</Text>
+        <Pressable onPress={() => nav.navigate('DailyLog')} style={[styles.card, styles.row]}>
+          <Kpi label="Passos (média 7d)" value={act.stepsAvg === null ? '—' : act.stepsAvg.toLocaleString('pt-BR')} flat />
+          <Kpi label="Sono (média 7d)" value={act.sleepAvg === null ? '—' : `${fmt(act.sleepAvg)} h`} flat />
+          <Kpi label="Atividades (sem.)" value={String(act.weekCount)} flat />
+        </Pressable>
+
         <Text style={styles.section}>Registrar</Text>
         <View style={styles.links}>
           <Link icon="scale-outline" title="Peso" to="Weight" />
           <Link icon="resize-outline" title="Medidas" to="Measurements" />
           <Link icon="camera-outline" title="Fotos" to="Photos" />
+        </View>
+        <View style={[styles.links, { marginTop: spacing.sm }]}>
+          <Link icon="walk-outline" title="Atividades" to="Activities" />
+          <Link icon="moon-outline" title="Passos e sono" to="DailyLog" />
         </View>
         <View style={{ height: spacing.xl }} />
       </ScrollView>

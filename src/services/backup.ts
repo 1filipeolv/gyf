@@ -4,7 +4,9 @@ import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { CollectionName, getProfile, listDocs, saveDoc } from './db';
 import { photoExists, photoUri } from './photos';
 import { updateProfile } from './profile';
-import { BodyWeight, Measurement, ProgressPhoto, Timestamped, UserProfile, Workout } from '../types';
+import { Activity, BodyWeight, DailyLog, Measurement, ProgressPhoto, Timestamped, UserProfile, Workout } from '../types';
+import { ACTIVITY_LABELS } from '../constants/activities';
+import { paceText } from '../utils/energy';
 import { MUSCLE_LABELS } from '../constants/muscles';
 import { SITE_LABELS, SITE_LIST } from '../constants/measurements';
 import { base64ToBytes, bytesToBase64 } from '../utils/base64';
@@ -20,6 +22,8 @@ const COLLECTIONS: CollectionName[] = [
   'progressPhotos',
   'analyses',
   'attendance',
+  'activities',
+  'dailyLogs',
 ];
 
 const PROFILE_FIELDS: (keyof UserProfile)[] = [
@@ -72,7 +76,7 @@ export async function exportJson(uid: string) {
   await share(uri, 'application/json', 'Exportar dados');
 }
 
-export type CsvKind = 'workouts' | 'weights' | 'measurements';
+export type CsvKind = 'workouts' | 'weights' | 'measurements' | 'activities' | 'dailyLogs';
 
 export async function exportCsv(uid: string, kind: CsvKind) {
   let csv = '';
@@ -112,6 +116,30 @@ export async function exportCsv(uid: string, kind: CsvKind) {
       list.map((w) => [formatDateBR(w.date), w.weightKg, w.bodyFatPct, w.notes])
     );
     name = 'peso';
+  } else if (kind === 'activities') {
+    const list = (await listDocs<Activity>(uid, 'activities')).sort((a, b) => a.date.localeCompare(b.date));
+    csv = toCsv(
+      ['Data', 'Tipo', 'Duração (min)', 'Distância (km)', 'Ritmo', 'FC média', 'Kcal', 'Origem da kcal', 'Notas'],
+      list.map((a) => [
+        formatDateBR(a.date),
+        ACTIVITY_LABELS[a.type] ?? a.type,
+        a.durationMin,
+        a.distanceKm,
+        paceText(a.type, a.durationMin, a.distanceKm),
+        a.avgHr,
+        a.kcal,
+        a.kcalSource === 'manual' ? 'manual' : 'estimada',
+        a.notes,
+      ])
+    );
+    name = 'atividades';
+  } else if (kind === 'dailyLogs') {
+    const list = (await listDocs<DailyLog>(uid, 'dailyLogs')).sort((a, b) => a.date.localeCompare(b.date));
+    csv = toCsv(
+      ['Data', 'Passos', 'Sono (h)', 'Qualidade do sono (1-5)'],
+      list.map((l) => [formatDateBR(l.date), l.steps, l.sleepHours, l.sleepQuality])
+    );
+    name = 'passos-sono';
   } else {
     const list = (await listDocs<Measurement>(uid, 'measurements')).sort((a, b) => a.date.localeCompare(b.date));
     csv = toCsv(

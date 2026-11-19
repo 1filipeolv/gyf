@@ -1,6 +1,7 @@
 import { DashData } from '../hooks/useDashboard';
 import { AnalysisInputSummary, MuscleGroup, ProgressPhoto } from '../types';
 import { MUSCLE_LABELS } from '../constants/muscles';
+import { ACTIVITY_LABELS } from '../constants/activities';
 import { SITE_LABELS } from '../constants/measurements';
 import { addDays, fromDateKey, toDateKey } from '../utils/date';
 import { est1RM, setsByMuscle } from '../utils/stats';
@@ -104,6 +105,56 @@ export function buildInput(d: DashData, photoIds: string[]) {
     ...Object.fromEntries(Object.entries(m.values).map(([k, v]) => [SITE_LABELS[k as keyof typeof SITE_LABELS], v])),
   }));
 
+  const acts = d.activities.filter((a) => a.date >= from);
+  const logs = d.dailyLogs.filter((l) => l.date >= from);
+  const avgVals = (vals: number[], digits = 1) => {
+    if (!vals.length) return null;
+    const f = 10 ** digits;
+    return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * f) / f;
+  };
+  const byType = new Map<string, typeof acts>();
+  acts.forEach((a) => byType.set(a.type, [...(byType.get(a.type) ?? []), a]));
+  const cardio =
+    acts.length === 0
+      ? 'sem registros'
+      : {
+          totalSessoes: acts.length,
+          sessoesPorSemanaMedia: r1(acts.length / (PERIOD_DAYS / 7)),
+          porTipo: [...byType.entries()].map(([t, list]) => {
+            const dist = list.filter((x) => x.distanceKm).reduce((a, x) => a + (x.distanceKm ?? 0), 0);
+            return {
+              tipo: ACTIVITY_LABELS[t as keyof typeof ACTIVITY_LABELS] ?? t,
+              sessoes: list.length,
+              minutosTotais: Math.round(list.reduce((a, x) => a + x.durationMin, 0)),
+              ...(dist > 0 ? { distanciaKmTotal: r1(dist) } : {}),
+              kcalMediaPorSessao: Math.round(list.reduce((a, x) => a + x.kcal, 0) / list.length),
+              kcalManuaisDe: list.filter((x) => x.kcalSource === 'manual').length,
+            };
+          }),
+          observacaoKcal: 'estimativa por MET, exceto as marcadas como manuais',
+        };
+  const stepVals = logs.filter((l) => l.steps).map((l) => l.steps as number);
+  const sleepVals = logs.filter((l) => l.sleepHours).map((l) => l.sleepHours as number);
+  const qualVals = logs.filter((l) => l.sleepQuality).map((l) => l.sleepQuality as number);
+  const dailyRecent = logs
+    .filter((l) => l.date >= addDays(today, -13) && (l.steps || l.sleepHours))
+    .map((l) => ({
+      data: l.date,
+      ...(l.steps ? { passos: l.steps } : {}),
+      ...(l.sleepHours ? { sonoHoras: l.sleepHours } : {}),
+    }));
+  const passosESono =
+    stepVals.length + sleepVals.length === 0
+      ? 'sem registros'
+      : {
+          diasComPassos: stepVals.length,
+          mediaPassosPorDia: avgVals(stepVals, 0) ?? 'sem registros',
+          diasComSono: sleepVals.length,
+          mediaSonoHoras: avgVals(sleepVals) ?? 'sem registros',
+          mediaQualidadeSono1a5: avgVals(qualVals) ?? 'sem registros',
+          ultimos14Dias: dailyRecent,
+        };
+
   const p = d.profile;
   const age = p?.birthDate
     ? Math.floor((Date.now() - fromDateKey(p.birthDate).getTime()) / 31557600000)
@@ -131,6 +182,8 @@ export function buildInput(d: DashData, photoIds: string[]) {
       tendenciaPctPorSemana: rate !== null && lastAvg ? Math.round((rate / lastAvg) * 10000) / 100 : null,
     },
     medidasCm: measurements,
+    atividadesCardio: cardio,
+    passosESono,
   };
 
   const summary: AnalysisInputSummary = {
@@ -139,6 +192,8 @@ export function buildInput(d: DashData, photoIds: string[]) {
     workoutsCount: workouts.length,
     weightEntries: weights.length,
     measurementEntries: d.measurements.length,
+    activitiesCount: acts.length,
+    dailyLogsCount: logs.length,
     photoIds,
   };
 

@@ -2,6 +2,8 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
 const CHANNEL = 'rest';
+const REMINDER_CHANNEL = 'reminders';
+const REMINDER_ID = 'daily-log-reminder';
 let initialized = false;
 let currentId: string | null = null;
 let chain: Promise<void> = Promise.resolve();
@@ -31,6 +33,12 @@ export async function initNotifications() {
         sound: 'default',
       });
     }
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync(REMINDER_CHANNEL, {
+        name: 'Lembretes',
+        importance: Notifications.AndroidImportance.DEFAULT,
+      });
+    }
     const perm = await Notifications.getPermissionsAsync();
     if (!perm.granted && perm.canAskAgain) await Notifications.requestPermissionsAsync();
   } catch {}
@@ -58,3 +66,35 @@ export const scheduleRestAlert = (endsAt: number) =>
       },
     });
   });
+
+export const scheduleDailyReminder = (hour: number) =>
+  enqueue(async () => {
+    await Notifications.cancelScheduledNotificationAsync(REMINDER_ID).catch(() => {});
+    await Notifications.scheduleNotificationAsync({
+      identifier: REMINDER_ID,
+      content: { title: 'Registro do dia', body: 'Anote seus passos e o sono de hoje.' },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour,
+        minute: 0,
+        channelId: REMINDER_CHANNEL,
+      },
+    });
+  });
+
+export const cancelDailyReminder = () =>
+  enqueue(async () => {
+    await Notifications.cancelScheduledNotificationAsync(REMINDER_ID);
+  });
+
+export async function ensureNotificationPermission(): Promise<boolean> {
+  try {
+    await initNotifications();
+    const perm = await Notifications.getPermissionsAsync();
+    if (perm.granted) return true;
+    if (!perm.canAskAgain) return false;
+    return (await Notifications.requestPermissionsAsync()).granted;
+  } catch {
+    return false;
+  }
+}

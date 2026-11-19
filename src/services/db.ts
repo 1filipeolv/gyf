@@ -22,7 +22,9 @@ export type CollectionName =
   | 'measurements'
   | 'progressPhotos'
   | 'analyses'
-  | 'attendance';
+  | 'attendance'
+  | 'activities'
+  | 'dailyLogs';
 
 export const userRef = (uid: string) => doc(db, 'users', uid);
 
