@@ -92,6 +92,7 @@ export async function exportCsv(uid: string, kind: CsvKind) {
             s.reps,
             s.weightKg,
             s.rpe,
+            s.restSec,
             s.type === 'warmup' ? 0 : s.reps * s.weightKg,
             !!s.isPR,
           ])
@@ -99,7 +100,7 @@ export async function exportCsv(uid: string, kind: CsvKind) {
       )
     );
     csv = toCsv(
-      ['Data', 'Treino', 'Exercício', 'Músculo', 'Série', 'Tipo', 'Reps', 'Carga (kg)', 'RPE', 'Volume (kg)', 'PR'],
+      ['Data', 'Treino', 'Exercício', 'Músculo', 'Série', 'Tipo', 'Reps', 'Carga (kg)', 'RPE', 'Descanso (s)', 'Volume (kg)', 'PR'],
       rows
     );
     name = 'treinos';

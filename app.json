@@ -2,7 +2,7 @@
   "expo": {
     "name": "GymApp",
     "slug": "gymapp",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -12,7 +12,7 @@
     },
     "android": {
       "package": "com.filipesxn.gymapp",
-      "versionCode": 2,
+      "versionCode": 3,
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.RECORD_AUDIO"
@@ -27,6 +27,13 @@
         }
       ],
       "expo-image",
+      "expo-keep-awake",
+      [
+        "expo-notifications",
+        {
+          "color": "#7C5CFF"
+        }
+      ],
       "expo-sharing",
       "expo-status-bar"
     ],

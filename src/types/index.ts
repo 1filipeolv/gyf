@@ -103,6 +103,10 @@ export type WorkoutExercise = {
   order: number;
   sets: WorkoutSet[];
   notes?: string;
+  equipment?: Equipment;
+  targetRepsMin?: number;
+  targetRepsMax?: number;
+  targetRestSec?: number;
 };
 
 export type Workout = Timestamped & {

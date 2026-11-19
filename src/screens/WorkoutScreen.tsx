@@ -1,4 +1,5 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { toast } from '../utils/toast';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -12,6 +13,8 @@ import RestTimer from '../components/RestTimer';
 import { useWorkout } from '../contexts/WorkoutContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNow } from '../hooks/useNow';
+import { useExercises } from '../hooks/useExercises';
+import { useExerciseHistory } from '../hooks/useExerciseHistory';
 import { listRoutines } from '../services/routines';
 import { Routine } from '../types';
 import { RootStackParamList } from '../navigation/types';
@@ -28,6 +31,16 @@ export default function WorkoutScreen() {
   const [saving, setSaving] = useState(false);
   const [routines, setRoutines] = useState<Routine[]>([]);
   const now = useNow(!!active);
+  const { custom } = useExercises();
+  const { history } = useExerciseHistory(!!active, active?.startedAt);
+
+  useEffect(() => {
+    if (!active) return;
+    activateKeepAwakeAsync('workout').catch(() => {});
+    return () => {
+      deactivateKeepAwake('workout').catch(() => {});
+    };
+  }, [!!active]);
 
   useFocusEffect(
     useCallback(() => {
@@ -56,7 +69,7 @@ export default function WorkoutScreen() {
           <Text style={styles.section}>Minhas rotinas</Text>
           {routines.length === 0 && <Text style={styles.empty}>Nenhuma rotina criada.</Text>}
           {routines.map((r) => (
-            <Pressable key={r.id} onPress={() => startFromRoutine(r)} style={styles.routine}>
+            <Pressable key={r.id} onPress={() => startFromRoutine(r, custom)} style={styles.routine}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.routineName}>{r.name}</Text>
                 <Text style={styles.routineMeta}>{r.exercises.length} exercícios</Text>
@@ -107,9 +120,10 @@ export default function WorkoutScreen() {
         <Stat label="Séries" value={String(done)} />
         <Stat label="Volume" value={`${volume} kg`} />
       </View>
+      <RestTimer />
       <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" style={{ flex: 1 }}>
         {active.exercises.map((e) => (
-          <ExerciseCard key={e.id} ex={e} />
+          <ExerciseCard key={e.id} ex={e} history={history.get(e.exerciseId)} />
         ))}
         <Pressable onPress={() => setModal(true)} style={styles.addEx}>
           <Text style={styles.addExText}>+ Adicionar exercício</Text>
@@ -120,11 +134,10 @@ export default function WorkoutScreen() {
           <Button title="Descartar" onPress={onDiscard} variant="ghost" />
         </View>
       </ScrollView>
-      <RestTimer />
       <ExercisePickerModal
         visible={modal}
         onClose={() => setModal(false)}
-        onSelect={(ex) => addExercise(ex.name, ex.primaryMuscle, ex.id)}
+        onSelect={(ex) => addExercise(ex.name, ex.primaryMuscle, ex.id, ex.equipment)}
       />
     </ScreenContainer>
   );

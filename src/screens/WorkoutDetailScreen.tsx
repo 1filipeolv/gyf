@@ -61,6 +61,7 @@ export default function WorkoutDetailScreen({ route, navigation }: Props) {
               <Text style={styles.idx}>{i + 1}</Text>
               <Text style={styles.set}>
                 {s.weightKg} kg × {s.reps}
+                {typeof s.restSec === 'number' ? `  ·  desc. ${formatDuration(s.restSec)}` : ''}
               </Text>
               <Text style={styles.e1}>1RM ~{Math.round(est1RM(s.weightKg, s.reps))}</Text>
               {s.isPR && (
