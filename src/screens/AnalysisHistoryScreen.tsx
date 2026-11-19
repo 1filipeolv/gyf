@@ -65,9 +65,18 @@ export default function AnalysisHistoryScreen() {
         <View style={styles.row}>
           <Pressable style={styles.main} onPress={() => nav.navigate('AnalysisDetail', { analysis: item })}>
             <Text style={styles.date}>{formatDateBR(toDateKey(new Date(item.createdAt)))}</Text>
+            <View style={styles.tagRow}>
+              <View style={[styles.tag, item.kind === 'weekly' && styles.tagWeekly]}>
+                <Text style={styles.tagText}>{item.kind === 'weekly' ? 'Resumo semanal' : 'Análise completa'}</Text>
+              </View>
+            </View>
             <Text style={styles.sub}>
-              {item.input.workoutsCount} treinos · {item.input.photoIds?.length ?? 0} fotos
-              {item.nutrition?.strategy ? ` · ${STRATEGY_LABELS[item.nutrition.strategy] ?? ''}` : ''}
+              {item.input.workoutsCount} treinos
+              {item.kind === 'weekly'
+                ? ` · ${formatDateBR(item.input.periodStart)} a ${formatDateBR(item.input.periodEnd)}`
+                : ` · ${item.input.photoIds?.length ?? 0} fotos${
+                    item.nutrition?.strategy ? ` · ${STRATEGY_LABELS[item.nutrition.strategy] ?? ''}` : ''
+                  }`}
             </Text>
             <Text style={styles.summary} numberOfLines={2}>
               {item.summary}
@@ -96,6 +105,10 @@ const styles = StyleSheet.create({
   main: { flex: 1, padding: spacing.md, minHeight: 64 },
   date: { color: colors.text, fontSize: 15, fontWeight: '700' },
   sub: { color: colors.muted, fontSize: 12, marginTop: 2 },
+  tagRow: { flexDirection: 'row', marginTop: 4 },
+  tag: { backgroundColor: colors.bg, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: colors.border },
+  tagWeekly: { borderColor: colors.primary },
+  tagText: { color: colors.text, fontSize: 11, fontWeight: '600' },
   summary: { color: colors.text, fontSize: 13, lineHeight: 18, marginTop: 6 },
   del: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
 });

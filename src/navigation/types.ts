@@ -9,7 +9,7 @@ export type TabParamList = {
 };
 
 export type RootStackParamList = {
-  Tabs: undefined;
+  Tabs: { screen?: keyof TabParamList } | undefined;
   Routines: undefined;
   RoutineEdit: { routine?: Routine };
   Library: undefined;
@@ -24,6 +24,8 @@ export type RootStackParamList = {
   DailyLog: undefined;
   Nutrition: undefined;
   Water: undefined;
+  Balance: undefined;
+  RealExpenditure: undefined;
   AnalysisHistory: undefined;
   AnalysisDetail: { analysis: Analysis };
 };

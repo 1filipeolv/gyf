@@ -76,6 +76,65 @@ const PRIORITY_COLOR = { high: colors.danger, medium: colors.warning, low: color
 
 type Filter = 'all' | AnalysisRecommendation['category'];
 
+function WeeklyView({ analysis }: { analysis: Analysis }) {
+  const w = analysis.weekly!;
+  return (
+    <View>
+      <View style={styles.badgeRow}>
+        <View style={styles.pill}>
+          <Ionicons name="calendar-outline" size={13} color={colors.muted} />
+          <Text style={styles.pillText}>{formatDateBR(toDateKey(new Date(analysis.createdAt)))}</Text>
+        </View>
+        <View style={styles.pill}>
+          <Ionicons name="today-outline" size={13} color={colors.muted} />
+          <Text style={styles.pillText}>
+            Resumo semanal · {formatDateBR(analysis.input.periodStart)} a {formatDateBR(analysis.input.periodEnd)}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.summary}>
+        <Text style={styles.summaryText}>{analysis.summary}</Text>
+      </View>
+
+      {!!w.wentWell.length && (
+        <Section title="O que foi bem">
+          {w.wentWell.map((t, i) => (
+            <View key={i} style={[styles.card, { borderLeftColor: colors.success }]}>
+              <Text style={styles.body}>{t}</Text>
+            </View>
+          ))}
+        </Section>
+      )}
+
+      {!!w.toAdjust.length && (
+        <Section title="Ajustar na próxima semana">
+          {w.toAdjust.map((t, i) => (
+            <View key={i} style={[styles.card, { borderLeftColor: colors.warning }]}>
+              <Text style={styles.body}>{t}</Text>
+            </View>
+          ))}
+        </Section>
+      )}
+
+      {!!w.actions.length && (
+        <Section title="3 ações">
+          {w.actions.map((a, i) => (
+            <View key={i} style={[styles.card, { borderLeftColor: colors.primary }]}>
+              <Text style={styles.cardTitle}>
+                {i + 1}. {a.title}
+              </Text>
+              <Text style={[styles.body, { marginTop: 4 }]}>{a.detail}</Text>
+            </View>
+          ))}
+        </Section>
+      )}
+
+      <Text style={styles.disc}>{DISCLAIMER}</Text>
+    </View>
+  );
+}
+
 export default function AnalysisView({ analysis }: { analysis: Analysis }) {
   const [filter, setFilter] = useState<Filter>('all');
   const strengths = analysis.strengths ?? [];
@@ -100,6 +159,8 @@ export default function AnalysisView({ analysis }: { analysis: Analysis }) {
   }, [recs]);
 
   const shownRecs = filter === 'all' ? recs : recs.filter((r) => r.category === filter);
+
+  if (analysis.kind === 'weekly' && analysis.weekly) return <WeeklyView analysis={analysis} />;
 
   const stats: { label: string; value: string }[] = [];
   if (n?.calorieTargetKcal) stats.push({ label: 'Calorias', value: `${n.calorieTargetKcal} kcal` });

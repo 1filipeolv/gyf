@@ -75,3 +75,69 @@ export function paceText(type: CardioType, durationMin: number, distanceKm?: num
   if (type === 'bike') return `${(distanceKm / (durationMin / 60)).toFixed(1).replace('.', ',')} km/h`;
   return `${mmss((durationMin * 60) / distanceKm)} /km`;
 }
+
+export const KCAL_PER_KG = 7700;
+
+export const ageFromBirth = (birthDate: string, today: Date = new Date()) => {
+  const [y, m, d] = birthDate.split('-').map(Number);
+  let age = today.getFullYear() - y;
+  if (today.getMonth() + 1 < m || (today.getMonth() + 1 === m && today.getDate() < d)) age--;
+  return age;
+};
+
+export const bmrMifflin = (sex: 'male' | 'female', age: number, heightCm: number, weightKg: number) =>
+  Math.round(10 * weightKg + 6.25 * heightCm - 5 * age + (sex === 'male' ? 5 : -161));
+
+export const coveredSteps = (type: CardioType, durationMin: number, distanceKm?: number): number => {
+  if (type === 'walk') return Math.round(distanceKm && distanceKm > 0 ? distanceKm * 1312 : durationMin * 100);
+  if (type === 'run') return Math.round(distanceKm && distanceKm > 0 ? distanceKm * 1150 : durationMin * 160);
+  return 0;
+};
+
+export const BAND_EXPENDITURE = 0.15;
+export const BAND_INTAKE = 0.1;
+
+export const uncertaintyBand = (expenditure: number, intake: number | null) =>
+  Math.round(BAND_EXPENDITURE * expenditure + BAND_INTAKE * (intake ?? 0));
+
+export type GoalKey = 'hypertrophy' | 'fat_loss' | 'recomposition' | 'strength' | 'maintenance';
+
+type GoalRule = { adjust: number; protein: number; proteinRange: [number, number]; label: string };
+
+export const GOAL_RULES: Record<GoalKey, GoalRule> = {
+  fat_loss: { adjust: -0.2, protein: 2.2, proteinRange: [1.8, 2.4], label: 'Déficit moderado (cerca de 20%)' },
+  hypertrophy: { adjust: 0.1, protein: 1.8, proteinRange: [1.6, 2.2], label: 'Superávit leve (cerca de 10%)' },
+  recomposition: { adjust: -0.05, protein: 2, proteinRange: [1.8, 2.4], label: 'Quase manutenção (cerca de -5%)' },
+  strength: { adjust: 0, protein: 1.8, proteinRange: [1.6, 2.2], label: 'Manutenção' },
+  maintenance: { adjust: 0, protein: 1.6, proteinRange: [1.4, 2], label: 'Manutenção' },
+};
+
+export type Targets = {
+  kcal: number;
+  proteinG: number;
+  fatG: number;
+  carbG: number;
+  proteinRangeG: [number, number];
+  adjustPct: number;
+  label: string;
+  flooredToBmr: boolean;
+};
+
+export function computeTargets(goal: GoalKey, tdee: number, weightKg: number, bmr: number): Targets {
+  const rule = GOAL_RULES[goal] ?? GOAL_RULES.maintenance;
+  const raw = Math.round(tdee * (1 + rule.adjust));
+  const kcal = Math.max(raw, bmr);
+  const proteinG = Math.round(rule.protein * weightKg);
+  const fatG = Math.round(Math.max(0.8 * weightKg, (0.2 * kcal) / 9));
+  const carbG = Math.max(0, Math.round((kcal - 4 * proteinG - 9 * fatG) / 4));
+  return {
+    kcal,
+    proteinG,
+    fatG,
+    carbG,
+    proteinRangeG: [Math.round(rule.proteinRange[0] * weightKg), Math.round(rule.proteinRange[1] * weightKg)],
+    adjustPct: rule.adjust,
+    label: rule.label,
+    flooredToBmr: raw < bmr,
+  };
+}

@@ -6,9 +6,109 @@ import { SITE_LABELS } from '../constants/measurements';
 import { addDays, fromDateKey, toDateKey } from '../utils/date';
 import { est1RM, setsByMuscle } from '../utils/stats';
 import { movingAvg, toPts, weeklyRate } from '../utils/trend';
+import { EnergyInputs, lastDays, learnedTdee } from '../utils/balance';
 
 const PERIOD_DAYS = 90;
 const r1 = (v: number) => Math.round(v * 10) / 10;
+
+const meanOf = (vals: number[], digits = 0) => {
+  if (!vals.length) return null;
+  const f = 10 ** digits;
+  return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * f) / f;
+};
+
+const energyBlock = (d: DashData, today: string) => {
+  const ei: EnergyInputs = {
+    profile: d.profile,
+    weights: d.weights,
+    workouts: d.workouts,
+    activities: d.activities,
+    dailyLogs: d.dailyLogs,
+  };
+  const days = lastDays(today, 7, ei);
+  if (!days.length) return 'sem registros (perfil incompleto ou sem peso)';
+  const withBal = days.filter((x) => x.balance !== null);
+  const t = learnedTdee(d.weights, d.dailyLogs, today);
+  return {
+    observacao: 'estimativas: gasto = TMB + treino + atividades + passos sem sobreposição, incerteza de cerca de 15%',
+    gastoEstimadoMedio7d: meanOf(days.map((x) => x.total)),
+    diasComIngestao: withBal.length,
+    balancoMedio7d: withBal.length ? meanOf(withBal.map((x) => x.balance as number)) : 'sem registros',
+    gastoRealAprendido: t.ok
+      ? {
+          kcal: t.value.tdee,
+          confianca: t.value.confidence === 'high' ? 'alta' : 'média',
+          janelaDias: t.value.windowDays,
+          ingestaoMedia: t.value.avgIntake,
+          tendenciaPesoKgPorSemana: t.value.slopeKgPerWeek,
+        }
+      : `indisponível: ${t.reason}`,
+  };
+};
+
+const periodStats = (d: DashData, from: string, to: string) => {
+  const w = d.workouts.filter((x) => x.date >= from && x.date <= to);
+  const a = d.activities.filter((x) => x.date >= from && x.date <= to);
+  const l = d.dailyLogs.filter((x) => x.date >= from && x.date <= to);
+  const wt = d.weights.filter((x) => x.date >= from && x.date <= to);
+  const nums = (f: (x: (typeof l)[number]) => number | undefined) => l.map(f).filter((v): v is number => !!v);
+  const food = nums((x) => x.kcal);
+  return {
+    de: from,
+    ate: to,
+    treinos: w.length,
+    series: w.reduce((s, x) => s + x.totalSets, 0),
+    volumeKg: Math.round(w.reduce((s, x) => s + x.totalVolumeKg, 0)),
+    atividades: a.length,
+    atividadesMinutos: Math.round(a.reduce((s, x) => s + x.durationMin, 0)),
+    atividadesKcal: Math.round(a.reduce((s, x) => s + x.kcal, 0)),
+    diasComPassos: nums((x) => x.steps).length,
+    passosMedia: meanOf(nums((x) => x.steps)) ?? 'sem registros',
+    diasComSono: nums((x) => x.sleepHours).length,
+    sonoMediaHoras: meanOf(nums((x) => x.sleepHours), 1) ?? 'sem registros',
+    sonoQualidadeMedia1a5: meanOf(nums((x) => x.sleepQuality), 1) ?? 'sem registros',
+    diasComAgua: nums((x) => x.waterMl).length,
+    aguaMediaMl: meanOf(nums((x) => x.waterMl)) ?? 'sem registros',
+    diasComAlimentacao: food.length,
+    kcalMedia: meanOf(food) ?? 'sem registros',
+    proteinaMediaG: meanOf(nums((x) => x.proteinG)) ?? 'sem registros',
+    carboidratoMediaG: meanOf(nums((x) => x.carbG)) ?? 'sem registros',
+    gorduraMediaG: meanOf(nums((x) => x.fatG)) ?? 'sem registros',
+    pesagens: wt.length,
+    pesoMedioKg: meanOf(wt.map((x) => x.weightKg), 1) ?? 'sem registros',
+  };
+};
+
+export function buildWeeklyInput(d: DashData) {
+  const today = toDateKey();
+  const cur = periodStats(d, addDays(today, -6), today);
+  const prev = periodStats(d, addDays(today, -13), addDays(today, -7));
+  const p = d.profile;
+  const rate = weeklyRate(movingAvg(toPts(d.weights), 7), 28);
+  const payload = {
+    perfil: {
+      objetivo: p?.goal,
+      experiencia: p?.experience,
+      pesoMetaKg: p?.targetWeightKg ?? 'não definido',
+      frequenciaMetaSemanal: p?.weeklyFrequencyTarget ?? 'não definida',
+    },
+    semanaAtual: cur,
+    semanaAnterior: prev,
+    tendenciaPesoKgPorSemana28d: rate !== null ? Math.round(rate * 100) / 100 : 'sem dados suficientes',
+    balancoEGastoReal: energyBlock(d, today),
+  };
+  const summary: AnalysisInputSummary = {
+    periodStart: addDays(today, -6),
+    periodEnd: today,
+    workoutsCount: cur.treinos,
+    weightEntries: cur.pesagens,
+    measurementEntries: 0,
+    activitiesCount: cur.atividades,
+    dailyLogsCount: d.dailyLogs.filter((x) => x.date >= addDays(today, -6)).length,
+    photoIds: [],
+  };
+  return { payload, summary };
+}
 
 export function pickPhotos(photos: ProgressPhoto[]): ProgressPhoto[] {
   const front = photos.filter((p) => p.angle === 'front');
@@ -213,6 +313,7 @@ export function buildInput(d: DashData, photoIds: string[]) {
     atividadesCardio: cardio,
     passosESono,
     alimentacaoEAgua,
+    balancoEGastoReal: energyBlock(d, today),
   };
 
   const summary: AnalysisInputSummary = {

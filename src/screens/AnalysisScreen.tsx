@@ -8,7 +8,7 @@ import Button from '../components/Button';
 import AnalysisView from '../components/AnalysisView';
 import { useAuth } from '../contexts/AuthContext';
 import { useDashboard } from '../hooks/useDashboard';
-import { runAnalysis } from '../services/ai';
+import { runAnalysis, runWeeklySummary } from '../services/ai';
 import { listAnalyses, saveAnalysis } from '../services/analyses';
 import { Analysis } from '../types';
 import { RootStackParamList } from '../navigation/types';
@@ -77,7 +77,7 @@ export default function AnalysisScreen() {
   const hasPhotos = dash.photos.length > 0;
   const canGenerate = hasWorkouts || hasWeights;
 
-  const generate = async () => {
+  const generate = async (kind: 'full' | 'weekly' = 'full') => {
     if (!user || busy) return;
     if (!canGenerate) {
       setError('Registre treinos ou peso antes de analisar.');
@@ -86,7 +86,7 @@ export default function AnalysisScreen() {
     setError(null);
     setBusy(true);
     try {
-      const a = await runAnalysis(dash);
+      const a = kind === 'weekly' ? await runWeeklySummary(dash) : await runAnalysis(dash);
       const id = await saveAnalysis(user.uid, a);
       const now = Date.now();
       setLast({ ...a, id, createdAt: now, updatedAt: now });
@@ -129,7 +129,9 @@ export default function AnalysisScreen() {
             )}
 
             <View style={{ marginTop: spacing.sm }}>
-              <Button title={last ? 'Gerar nova análise' : 'Gerar análise'} onPress={generate} loading={busy} />
+              <Button title={last ? 'Gerar nova análise' : 'Gerar análise'} onPress={() => generate('full')} loading={busy} />
+              <View style={{ height: spacing.sm }} />
+              <Button title="Resumo semanal (sem fotos)" variant="ghost" onPress={() => generate('weekly')} />
             </View>
 
             {busy && (
@@ -146,7 +148,7 @@ export default function AnalysisScreen() {
                   <Text style={styles.errTitle}>Algo deu errado</Text>
                   <Text style={styles.cardText}>{error}</Text>
                   {canGenerate && (
-                    <Pressable onPress={generate} style={styles.retry}>
+                    <Pressable onPress={() => generate()} style={styles.retry}>
                       <Text style={styles.retryText}>Tentar de novo</Text>
                     </Pressable>
                   )}

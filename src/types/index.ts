@@ -207,7 +207,15 @@ export type AnalysisInputSummary = {
   photoIds: string[];
 };
 
+export type WeeklySummary = {
+  wentWell: string[];
+  toAdjust: string[];
+  actions: { title: string; detail: string }[];
+};
+
 export type Analysis = Timestamped & {
+  kind?: 'full' | 'weekly';
+  weekly?: WeeklySummary;
   model: string;
   goal: Goal;
   input: AnalysisInputSummary;

@@ -173,6 +173,7 @@ export default function ProgressScreen() {
         <View style={[styles.links, { marginTop: spacing.sm }]}>
           <Link icon="restaurant-outline" title="Alimentação" to="Nutrition" />
           <Link icon="water-outline" title="Água" to="Water" />
+          <Link icon="flame-outline" title="Balanço" to="Balance" />
         </View>
         <View style={{ height: spacing.xl }} />
       </ScrollView>
