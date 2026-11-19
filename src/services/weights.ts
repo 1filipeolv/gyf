@@ -1,0 +1,16 @@
+import { orderBy } from 'firebase/firestore';
+import { listDocs, removeDoc, saveDoc } from './db';
+import { BodyWeight } from '../types';
+
+export const listWeights = (uid: string) =>
+  listDocs<BodyWeight>(uid, 'bodyWeights', orderBy('date', 'asc'));
+
+export const saveWeight = (uid: string, date: string, weightKg: number, bodyFatPct?: number) =>
+  saveDoc<BodyWeight>(uid, 'bodyWeights', {
+    id: date,
+    date,
+    weightKg,
+    ...(bodyFatPct ? { bodyFatPct } : {}),
+  });
+
+export const removeWeight = (uid: string, id: string) => removeDoc(uid, 'bodyWeights', id);

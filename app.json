@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "GymApp",
+    "slug": "gymapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.seunome.gymapp"
+    },
+    "android": {
+      "package": "com.seunome.gymapp",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permitir acesso às fotos para registrar seu progresso.",
+          "cameraPermission": "Permitir uso da câmera para fotos de progresso."
+        }
+      ],
+      "expo-image",
+      "expo-sharing",
+      "expo-status-bar"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e7f69aca-e80a-4c86-91f5-1a75095fb3e8"
+      }
+    },
+    "owner": "filipesxn"
+  }
+}
