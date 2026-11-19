@@ -1,0 +1,22 @@
+{
+  "cli": {
+    "version": ">= 3.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "preview": {
+      "channel": "preview",
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDCmD0t2YuYS9I0atm-dICQtJAEu9II5JQ",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "gymf-f9fde.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "gymf-f9fde",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "513046082795",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:1055324722846:web:8c8e8e8e8e8e8e8e8e8e8e"
+      }
+    }
+  }
+}

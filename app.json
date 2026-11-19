@@ -8,11 +8,13 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.seunome.gymapp"
+      "bundleIdentifier": "com.filipesxn.gymapp"
     },
     "android": {
-      "package": "com.seunome.gymapp",
+      "package": "com.filipesxn.gymapp",
+      "versionCode": 2,
       "permissions": [
+        "android.permission.RECORD_AUDIO",
         "android.permission.RECORD_AUDIO"
       ]
     },
@@ -33,6 +35,11 @@
         "projectId": "e7f69aca-e80a-4c86-91f5-1a75095fb3e8"
       }
     },
-    "owner": "filipesxn"
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e7f69aca-e80a-4c86-91f5-1a75095fb3e8"
+    }
   }
 }
