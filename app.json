@@ -2,7 +2,7 @@
   "expo": {
     "name": "GymApp",
     "slug": "gymapp",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -12,11 +12,14 @@
     },
     "android": {
       "package": "com.filipesxn.gymapp",
-      "versionCode": 3,
+      "versionCode": 4,
       "permissions": [
-        "android.permission.RECORD_AUDIO",
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#4A2FC0"
+      }
     },
     "plugins": [
       [
@@ -27,6 +30,7 @@
         }
       ],
       "expo-image",
+      "expo-keep-awake",
       [
         "expo-notifications",
         {
@@ -46,6 +50,12 @@
     },
     "updates": {
       "url": "https://u.expo.dev/e7f69aca-e80a-4c86-91f5-1a75095fb3e8"
+    },
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0B0F"
     }
   }
 }
