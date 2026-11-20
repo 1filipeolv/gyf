@@ -30,7 +30,6 @@
         }
       ],
       "expo-image",
-      "expo-keep-awake",
       [
         "expo-notifications",
         {
