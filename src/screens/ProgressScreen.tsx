@@ -9,6 +9,7 @@ import BarChart from '../components/BarChart';
 import { useDashboard } from '../hooks/useDashboard';
 import { RootStackParamList } from '../navigation/types';
 import { SITE_LABELS } from '../constants/measurements';
+import Tutorial from '../components/Tutorial';
 import { activitySummary, measurementDeltas, nutritionSummary, streakWeeks, weeklyVolume, weightSummary } from '../utils/dashboard';
 import { countPRs, fmtKg } from '../utils/stats';
 import { addDays, formatDateBR, toDateKey } from '../utils/date';
@@ -64,6 +65,13 @@ export default function ProgressScreen() {
 
   return (
     <ScreenContainer title="Progresso">
+      <Tutorial
+        id="progress"
+        steps={[
+          { title: 'Seu progresso', text: 'Aqui ficam os gráficos de volume, peso, medidas e fotos. Tudo vem do check-in semanal e dos treinos.' },
+          { title: 'Fotos em linha do tempo', text: 'A primeira foto é o Dia 1. As demais mostram quantos dias se passaram desde ela.' },
+        ]}
+      />
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.row}>
           <Kpi label="Treinos na semana" value={`${d.freq}/${d.target}`} ok={d.freq >= d.target} />
@@ -146,18 +154,10 @@ export default function ProgressScreen() {
           )}
         </Pressable>
 
-        <Text style={styles.section}>Atividade e sono</Text>
-        <Pressable onPress={() => nav.navigate('DailyLog')} style={[styles.card, styles.row]}>
-          <Kpi label="Passos (média 7d)" value={act.stepsAvg === null ? '—' : act.stepsAvg.toLocaleString('pt-BR')} flat />
-          <Kpi label="Sono (média 7d)" value={act.sleepAvg === null ? '—' : `${fmt(act.sleepAvg)} h`} flat />
-          <Kpi label="Atividades (sem.)" value={String(act.weekCount)} flat />
-        </Pressable>
-
-        <Text style={styles.section}>Alimentação e água</Text>
+        <Text style={styles.section}>Alimentação</Text>
         <Pressable onPress={() => nav.navigate('Nutrition')} style={[styles.card, styles.row]}>
           <Kpi label="Kcal (média 7d)" value={nut.kcalAvg === null ? '—' : nut.kcalAvg.toLocaleString('pt-BR')} flat />
           <Kpi label="Proteína g (7d)" value={nut.proteinAvg === null ? '—' : String(nut.proteinAvg)} flat />
-          <Kpi label="Água hoje" value={`${fmt(nut.todayMl / 1000)} L`} flat />
         </Pressable>
 
         <Text style={styles.section}>Registrar</Text>
@@ -167,13 +167,9 @@ export default function ProgressScreen() {
           <Link icon="camera-outline" title="Fotos" to="Photos" />
         </View>
         <View style={[styles.links, { marginTop: spacing.sm }]}>
-          <Link icon="walk-outline" title="Atividades" to="Activities" />
-          <Link icon="moon-outline" title="Passos e sono" to="DailyLog" />
-        </View>
-        <View style={[styles.links, { marginTop: spacing.sm }]}>
+          <Link icon="checkbox-outline" title="Check-in" to="Checkin" />
           <Link icon="restaurant-outline" title="Alimentação" to="Nutrition" />
-          <Link icon="water-outline" title="Água" to="Water" />
-          <Link icon="flame-outline" title="Balanço" to="Balance" />
+          <Link icon="calendar-outline" title="Calendário" to="Calendar" />
         </View>
         <View style={{ height: spacing.xl }} />
       </ScrollView>

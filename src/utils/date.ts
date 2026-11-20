@@ -29,3 +29,5 @@ export const formatDateBR = (key: string): string => {
   const [y, m, d] = key.split('-');
   return `${d}/${m}/${y}`;
 };
+export const dayNumber = (date: string, firstDate: string): number =>
+  Math.round((fromDateKey(date).getTime() - fromDateKey(firstDate).getTime()) / 86400000) + 1;

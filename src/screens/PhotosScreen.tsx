@@ -13,7 +13,7 @@ import { listPhotos, photoUri, removePhoto, savePhoto } from '../services/photos
 import { PhotoAngle, ProgressPhoto } from '../types';
 import { RootStackParamList } from '../navigation/types';
 import { parseNum } from '../utils/workout';
-import { formatDateBR, toDateKey } from '../utils/date';
+import { dayNumber, formatDateBR, toDateKey } from '../utils/date';
 import { colors, radius, spacing } from '../theme';
 
 type Filter = PhotoAngle | 'all';
@@ -53,8 +53,10 @@ export default function PhotosScreen() {
     }, [load])
   );
 
+  const firstDate = useMemo(() => (list.length ? [...list].map((p) => p.date).sort()[0] : toDateKey()), [list]);
+
   const shown = useMemo(
-    () => [...list].filter((p) => filter === 'all' || p.angle === filter).reverse(),
+    () => [...list].filter((p) => filter === 'all' || p.angle === filter).sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt),
     [list, filter]
   );
 
@@ -139,19 +141,19 @@ export default function PhotosScreen() {
         numColumns={3}
         columnWrapperStyle={{ gap: spacing.sm }}
         ListHeaderComponent={header}
-        ListEmptyComponent={<EmptyState icon="camera-outline" title="Nenhuma foto" hint="Registre fotos de frente, lado e costas." />}
+        ListEmptyComponent={<EmptyState icon="camera-outline" title="Nenhuma foto" hint="Sem obrigação: a primeira foto vira o Dia 1 da sua linha do tempo." />}
         ListFooterComponent={<View style={{ height: spacing.xl }} />}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
           <Pressable onLongPress={() => remove(item)} style={styles.thumbWrap}>
             <Image source={{ uri: photoUri(item) }} style={styles.thumb} contentFit="cover" />
             <Text style={styles.cap}>
-              {ANGLE_LABELS[item.angle]} · {formatDateBR(item.date).slice(0, 5)}
+              Dia {dayNumber(item.date, firstDate)} · {formatDateBR(item.date).slice(0, 5)}{'\n'}{ANGLE_LABELS[item.angle]}
             </Text>
           </Pressable>
         )}
       />
-      <Text style={styles.hint}>Segure uma foto para excluir</Text>
+      <Text style={styles.hint}>Linha do tempo: Dia 1 é a primeira foto. Segure uma foto para excluir</Text>
     </View>
   );
 }

@@ -15,6 +15,7 @@ export type DailyLogPatch = {
   carbG?: number;
   fatG?: number;
   foodNotes?: string;
+  foodLoggedAt?: number;
 };
 
 const clean = (patch: DailyLogPatch) =>

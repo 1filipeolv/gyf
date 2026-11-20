@@ -19,6 +19,6 @@ export default function ScreenContainer({ title, children }: Props) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: spacing.md, paddingVertical: spacing.md },
-  title: { color: colors.text, fontSize: 28, fontWeight: '700' },
+  title: { color: colors.text, fontSize: 30, fontWeight: '800' },
   body: { flex: 1, paddingHorizontal: spacing.md },
 });

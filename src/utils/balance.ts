@@ -1,6 +1,8 @@
 import { Activity, BodyWeight, DailyLog, UserProfile, Workout } from '../types';
 import { addDays, fromDateKey } from './date';
 import {
+  computeTargets,
+  GoalKey,
   ageFromBirth,
   bmrMifflin,
   coveredSteps,
@@ -168,4 +170,17 @@ export function tdeeSeries(weights: BodyWeight[], logs: DailyLog[], today: strin
     if (r.ok) out.push({ date: end, tdee: r.value.tdee, confidence: r.value.confidence });
   }
   return out;
+}
+
+export type Overrides = { kcal?: number; proteinG?: number; fatG?: number };
+
+export function autoTargets(inp: EnergyInputs, today: string, over: Overrides = {}): { kcal: number; proteinG: number } | null {
+  const e = dayEnergy(today, inp);
+  if (!e) return null;
+  const t = learnedTdee(inp.weights, inp.dailyLogs, today);
+  const days = lastDays(today, 7, inp);
+  const avg = days.length ? days.reduce((a, d) => a + d.total, 0) / days.length : 0;
+  const base = t.ok ? t.value.tdee : Math.max(Math.round(avg), Math.round(e.bmr * 1.2));
+  const tg = computeTargets((inp.profile?.goal ?? 'maintenance') as GoalKey, base, e.weightKg, e.bmr);
+  return { kcal: over.kcal ?? tg.kcal, proteinG: over.proteinG ?? tg.proteinG };
 }

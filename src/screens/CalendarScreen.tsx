@@ -7,7 +7,11 @@ import Button from '../components/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { getProfile, listByDateRange } from '../services/db';
 import { listAttendance, removeAttendance, saveAttendance } from '../services/attendance';
-import { Activity, Attendance, Workout } from '../types';
+import { Activity, Attendance, DailyLog, Workout } from '../types';
+import { listDailyLogs } from '../services/dailyLogs';
+import { useDashboard } from '../hooks/useDashboard';
+import { useTargets } from '../hooks/useTargets';
+import { foodDay } from '../utils/foodStatus';
 import { listActivitiesRange } from '../services/activities';
 import { getLatestWeightKg } from '../services/weights';
 import { paceText, workoutKcal } from '../utils/energy';
@@ -46,6 +50,9 @@ export default function CalendarScreen() {
   const [monthWorkouts, setMonthWorkouts] = useState<Workout[]>([]);
   const [monthAttendance, setMonthAttendance] = useState<Attendance[]>([]);
   const [monthActivities, setMonthActivities] = useState<Activity[]>([]);
+  const [monthLogs, setMonthLogs] = useState<DailyLog[]>([]);
+  const dash = useDashboard();
+  const kcalTarget = useTargets(dash)?.kcal ?? null;
   const [weightKg, setWeightKg] = useState<number | null>(null);
   const [recentActive, setRecentActive] = useState<Set<string>>(new Set());
   const [target, setTarget] = useState(3);
@@ -56,11 +63,13 @@ export default function CalendarScreen() {
     async (m: typeof month) => {
       if (!user) return;
       try {
-        const [w, a, c] = await Promise.all([
+        const [w, a, c, lg] = await Promise.all([
           listByDateRange<Workout>(user.uid, 'workouts', monthStart(m), monthEnd(m)),
           listAttendance(user.uid, monthStart(m), monthEnd(m)),
           listActivitiesRange(user.uid, monthStart(m), monthEnd(m)),
+          listDailyLogs(user.uid, monthStart(m), monthEnd(m)),
         ]);
+        setMonthLogs(lg);
         setMonthWorkouts(w);
         setMonthAttendance(a);
         setMonthActivities(c);
@@ -215,6 +224,19 @@ export default function CalendarScreen() {
                           <View key={t} style={[styles.dot, { backgroundColor: ACTIVITY_COLORS[t] }]} />
                         ))}
                       </View>
+                      {key <= today && (
+                        <View
+                          style={[
+                            styles.kbar,
+                            {
+                              backgroundColor: (() => {
+                                const s = foodDay(monthLogs.find((l) => l.date === key), key, kcalTarget).status;
+                                return s === 'ok' ? colors.success : s === 'over' ? colors.warning : colors.border;
+                              })(),
+                            },
+                          ]}
+                        />
+                      )}
                     </View>
                   </Pressable>
                 );
@@ -224,6 +246,9 @@ export default function CalendarScreen() {
         )}
       </View>
 
+      <Text style={{ color: colors.muted, fontSize: 11, marginTop: spacing.sm }}>
+        Barra do dia: cinza = sem kcal · verde = dentro da meta · amarela = acima da meta
+      </Text>
       <View style={styles.stats}>
         <Stat label="Treinos" value={String(stats.workouts)} />
         <Stat label="Atividades" value={String(stats.activities)} />
@@ -349,6 +374,7 @@ const styles = StyleSheet.create({
   dayNumActive: { color: colors.text, fontWeight: '800' },
   dots: { flexDirection: 'row', gap: 3, height: 7, marginTop: 3 },
   dot: { width: 7, height: 7, borderRadius: 4 },
+  kbar: { width: 18, height: 3, borderRadius: 2, marginTop: 3 },
   stats: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
   stat: {
     flex: 1,

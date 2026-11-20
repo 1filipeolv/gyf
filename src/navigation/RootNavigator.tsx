@@ -4,6 +4,7 @@ import { DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { colors } from '../theme';
 import { refreshWaterReminders } from '../utils/water';
+import { initDefaultReminders } from '../utils/reminders';
 import { AuthStackParamList, RootStackParamList } from './types';
 import TabNavigator from './TabNavigator';
 import LoginScreen from '../screens/LoginScreen';
@@ -25,6 +26,8 @@ import ActivitiesScreen from '../screens/ActivitiesScreen';
 import DailyLogScreen from '../screens/DailyLogScreen';
 import NutritionScreen from '../screens/NutritionScreen';
 import WaterScreen from '../screens/WaterScreen';
+import MoreRecordsScreen from '../screens/MoreRecordsScreen';
+import CheckinScreen from '../screens/CheckinScreen';
 import BalanceScreen from '../screens/BalanceScreen';
 import RealExpenditureScreen from '../screens/RealExpenditureScreen';
 
@@ -47,7 +50,10 @@ export default function RootNavigator() {
   const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (user) refreshWaterReminders(user.uid).catch(() => {});
+    if (user) {
+      refreshWaterReminders(user.uid).catch(() => {});
+      initDefaultReminders().catch(() => {});
+    }
   }, [user]);
 
   if (loading) {
@@ -79,6 +85,8 @@ export default function RootNavigator() {
           <Stack.Screen name="DailyLog" component={DailyLogScreen} options={{ headerShown: true, title: 'Registro do dia' }} />
           <Stack.Screen name="Nutrition" component={NutritionScreen} options={{ headerShown: true, title: 'Alimentação' }} />
           <Stack.Screen name="Water" component={WaterScreen} options={{ headerShown: true, title: 'Água' }} />
+          <Stack.Screen name="MoreRecords" component={MoreRecordsScreen} options={{ headerShown: true, title: 'Mais registros' }} />
+          <Stack.Screen name="Checkin" component={CheckinScreen} options={{ headerShown: true, title: 'Check-in da semana' }} />
           <Stack.Screen name="Balance" component={BalanceScreen} options={{ headerShown: true, title: 'Balanço' }} />
           <Stack.Screen name="RealExpenditure" component={RealExpenditureScreen} options={{ headerShown: true, title: 'Gasto real' }} />
           <Stack.Screen name="AnalysisHistory" component={AnalysisHistoryScreen} options={{ headerShown: true, title: 'Análises anteriores' }} />

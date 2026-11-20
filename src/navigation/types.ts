@@ -1,6 +1,8 @@
 import { Analysis, Routine, Workout } from '../types';
 
 export type TabParamList = {
+  Today: undefined;
+  More: undefined;
   Workout: undefined;
   History: undefined;
   Progress: undefined;
@@ -25,6 +27,8 @@ export type RootStackParamList = {
   Nutrition: undefined;
   Water: undefined;
   Balance: undefined;
+  MoreRecords: undefined;
+  Checkin: undefined;
   RealExpenditure: undefined;
   AnalysisHistory: undefined;
   AnalysisDetail: { analysis: Analysis };

@@ -8,7 +8,8 @@ export const listMeasurements = (uid: string) =>
 export const saveMeasurement = (
   uid: string,
   date: string,
-  values: Partial<Record<MeasurementSite, number>>
-) => saveDoc<Measurement>(uid, 'measurements', { id: date, date, values });
+  values: Partial<Record<MeasurementSite, number>>,
+  loggedAt?: number
+) => saveDoc<Measurement>(uid, 'measurements', { id: date, date, values, ...(loggedAt ? { loggedAt } : {}) });
 
 export const removeMeasurement = (uid: string, id: string) => removeDoc(uid, 'measurements', id);

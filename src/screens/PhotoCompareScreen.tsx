@@ -6,7 +6,7 @@ import Chips from '../components/Chips';
 import { useAuth } from '../contexts/AuthContext';
 import { listPhotos, photoUri } from '../services/photos';
 import { PhotoAngle, ProgressPhoto } from '../types';
-import { formatDateBR } from '../utils/date';
+import { dayNumber, formatDateBR } from '../utils/date';
 import { colors, radius, spacing } from '../theme';
 
 const angleOpts: { key: PhotoAngle; label: string }[] = [
@@ -31,6 +31,7 @@ export default function PhotoCompareScreen() {
     }, [user])
   );
 
+  const first = useMemo(() => (list.length ? list.map((x) => x.date).sort()[0] : ''), [list]);
   const byAngle = useMemo(() => list.filter((p) => p.angle === angle), [list, angle]);
   const left = byAngle.find((p) => p.id === leftId) ?? byAngle[0];
   const right = byAngle.find((p) => p.id === rightId) ?? byAngle[byAngle.length - 1];
@@ -49,7 +50,7 @@ export default function PhotoCompareScreen() {
       {p ? (
         <>
           <Image source={{ uri: photoUri(p) }} style={styles.img} contentFit="cover" />
-          <Text style={styles.date}>{formatDateBR(p.date)}</Text>
+          <Text style={styles.date}>Dia {dayNumber(p.date, first)} · {formatDateBR(p.date)}</Text>
           {!!p.weightKg && <Text style={styles.kg}>{fmt(p.weightKg)} kg</Text>}
         </>
       ) : (
@@ -69,7 +70,7 @@ export default function PhotoCompareScreen() {
             style={[styles.mini, sel === p.id && styles.miniOn]}
             contentFit="cover"
           />
-          <Text style={styles.miniText}>{formatDateBR(p.date).slice(0, 5)}</Text>
+          <Text style={styles.miniText}>Dia {dayNumber(p.date, first)}</Text>
         </Pressable>
       ))}
     </ScrollView>

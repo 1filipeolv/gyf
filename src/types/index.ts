@@ -145,6 +145,7 @@ export type Routine = Timestamped & {
 
 export type BodyWeight = Timestamped & {
   date: string;
+  loggedAt?: number;
   weightKg: number;
   bodyFatPct?: number;
   notes?: string;
@@ -152,6 +153,7 @@ export type BodyWeight = Timestamped & {
 
 export type Measurement = Timestamped & {
   date: string;
+  loggedAt?: number;
   values: Partial<Record<MeasurementSite, number>>;
   notes?: string;
 };
@@ -260,4 +262,5 @@ export type DailyLog = Timestamped & {
   carbG?: number;
   fatG?: number;
   foodNotes?: string;
+  foodLoggedAt?: number;
 };

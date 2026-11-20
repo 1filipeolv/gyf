@@ -37,11 +37,11 @@ export default function Button({ title, onPress, loading, variant = 'primary' }:
 
 const styles = StyleSheet.create({
   btn: {
-    height: 52,
+    height: 60,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ghost: { borderWidth: 1, borderColor: colors.border },
-  text: { color: colors.text, fontSize: 16, fontWeight: '600' },
+  text: { color: colors.text, fontSize: 17, fontWeight: '700' },
 });

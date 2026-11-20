@@ -1,6 +1,7 @@
 import { ageFromBirth, bmrMifflin, computeTargets, coveredSteps, uncertaintyBand } from '../src/utils/energy';
 import { dayEnergy, learnedTdee, tdeeSeries } from '../src/utils/balance';
 import { addDays } from '../src/utils/date';
+import { foodDay, periodBalance, weekStartKey } from '../src/utils/foodStatus';
 
 let fails = 0;
 const check = (name: string, cond: boolean) => {
@@ -41,6 +42,14 @@ const inp = { profile, weights, workouts: [{ date: today, durationSec: 3600 }] a
 const e = dayEnergy(today, inp);
 check('dia calculado', !!e && e.workout > 0 && e.activity === 150 && e.stepsCounted === 8000 - 3936 && e.balance === 2500 - e.total);
 check('sem perfil = null', dayEnergy(today, { ...inp, profile: null }) === null);
+
+const fd = (kcal: number | undefined, d = today, at?: number) => foodDay(kcal ? ({ date: d, kcal, foodLoggedAt: at } as never) : undefined, d, 2000);
+check('status pendente', fd(undefined).status === 'pending');
+check('status ok ate +5%', fd(2100).status === 'ok' && fd(2101).status === 'over');
+check('atrasado', fd(1900, '2026-11-17', new Date(2026, 10, 18, 9).getTime()).late && !fd(1900, today, new Date(2026, 10, 19, 9).getTime()).late);
+check('semana comeca segunda', weekStartKey('2026-11-19') === '2026-11-16' && weekStartKey('2026-11-22') === '2026-11-16');
+const pb = periodBalance([{ date: '2026-11-17', kcal: 2300 }, { date: '2026-11-18', kcal: 1800 }] as never[], '2026-11-16', '2026-11-19', 2000);
+check('saldo da semana', pb.saldo === 100 && pb.excess === 300 && pb.logged === 2 && pb.pendingPast === 1);
 
 if (fails) throw new Error(`${fails} falhas`);
 console.log('todos ok');

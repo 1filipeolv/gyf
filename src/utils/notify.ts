@@ -145,3 +145,21 @@ export const replaceWaterReminders = (dates: Date[]) =>
       });
     }
   });
+
+const CHECKIN_ID = 'checkin-weekly';
+
+export const scheduleCheckinReminder = (hour = 9) =>
+  enqueue(async () => {
+    await Notifications.cancelScheduledNotificationAsync(CHECKIN_ID).catch(() => {});
+    await Notifications.scheduleNotificationAsync({
+      identifier: CHECKIN_ID,
+      content: { title: 'Check-in da semana', body: 'Hoje é dia de registrar peso e medidas.' },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+        weekday: 1,
+        hour,
+        minute: 0,
+        channelId: REMINDER_CHANNEL,
+      },
+    });
+  });
