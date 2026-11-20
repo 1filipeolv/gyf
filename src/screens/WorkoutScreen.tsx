@@ -5,6 +5,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import ScreenContainer from '../components/ScreenContainer';
+import Tutorial from '../components/Tutorial';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import ExerciseCard from '../components/ExerciseCard';
@@ -20,7 +21,10 @@ import { Routine } from '../types';
 import { RootStackParamList } from '../navigation/types';
 import { formatDuration } from '../utils/date';
 import { setVolume } from '../utils/workout';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing } from '../theme';
+
+const WEEKDAY_SHORT_PT = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
 export default function WorkoutScreen() {
   const { active, start, startFromRoutine, discard, finish, addExercise } = useWorkout();
@@ -29,6 +33,7 @@ export default function WorkoutScreen() {
   const [name, setName] = useState('');
   const [modal, setModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [more, setMore] = useState(false);
   const [routines, setRoutines] = useState<Routine[]>([]);
   const now = useNow(!!active);
   const { custom } = useExercises();
@@ -49,38 +54,86 @@ export default function WorkoutScreen() {
   );
 
   if (!active) {
+    const wd = new Date().getDay();
+    const todays = routines.find((r) => r.weekdays?.includes(wd));
+    const others = routines.filter((r) => r.id !== todays?.id);
     return (
       <ScreenContainer title="Treino">
+        <Tutorial
+          id="workout"
+          steps={[
+            { title: 'Treino do dia', text: 'Defina os dias da semana em cada rotina e o treino de hoje abre aqui, pronto para iniciar.' },
+            { title: 'Durante o treino', text: 'Marque cada série concluída. O descanso conta sozinho e a carga anterior aparece como referência.' },
+          ]}
+        />
         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <Input
-            label="Nome do treino"
-            value={name}
-            onChangeText={setName}
-            placeholder="Ex: Peito e tríceps"
-            autoCapitalize="sentences"
-          />
-          <Button
-            title="Iniciar treino vazio"
-            onPress={() => {
-              start(name);
-              setName('');
-            }}
-          />
-          <Text style={styles.section}>Minhas rotinas</Text>
-          {routines.length === 0 && <Text style={styles.empty}>Nenhuma rotina criada.</Text>}
-          {routines.map((r) => (
-            <Pressable key={r.id} onPress={() => startFromRoutine(r, custom)} style={styles.routine}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.routineName}>{r.name}</Text>
-                <Text style={styles.routineMeta}>{r.exercises.length} exercícios</Text>
-              </View>
-              <Text style={styles.play}>Iniciar</Text>
-            </Pressable>
-          ))}
-          <View style={{ height: spacing.md }} />
-          <Button title="Gerenciar rotinas" onPress={() => nav.navigate('Routines')} variant="ghost" />
-          <View style={{ height: spacing.sm }} />
-          <Button title="Biblioteca de exercícios" onPress={() => nav.navigate('Library')} variant="ghost" />
+          {todays ? (
+            <View style={styles.today}>
+              <Text style={styles.todayTag}>TREINO DE HOJE</Text>
+              <Text style={styles.todayName}>{todays.name}</Text>
+              {todays.exercises.slice(0, 6).map((e) => (
+                <Text key={e.id} style={styles.todayEx}>
+                  {e.exerciseName} · {e.targetSets}x{e.targetRepsMin === e.targetRepsMax ? e.targetRepsMin : `${e.targetRepsMin}-${e.targetRepsMax}`}
+                </Text>
+              ))}
+              {todays.exercises.length > 6 && <Text style={styles.todayEx}>+ {todays.exercises.length - 6} exercícios</Text>}
+              <Pressable onPress={() => startFromRoutine(todays, custom)} style={styles.bigBtn}>
+                <Text style={styles.bigBtnText}>Iniciar</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.today}>
+              <Text style={styles.todayTag}>HOJE</Text>
+              <Text style={styles.todayName}>{routines.length ? 'Sem treino planejado' : 'Nenhuma rotina criada'}</Text>
+              <Text style={styles.todayEx}>
+                {routines.length
+                  ? 'Defina os dias da semana de cada rotina em "Gerenciar rotinas" ou escolha um treino em Mais opções.'
+                  : 'Crie sua rotina (ou importe sua planilha) para ver o treino do dia aqui.'}
+              </Text>
+            </View>
+          )}
+
+          <Pressable onPress={() => setMore((m) => !m)} style={styles.moreBtn}>
+            <Text style={styles.moreText}>Mais opções</Text>
+            <Ionicons name={more ? 'chevron-up' : 'chevron-down'} size={20} color={colors.muted} />
+          </Pressable>
+
+          {more && (
+            <View>
+              {others.map((r) => (
+                <Pressable key={r.id} onPress={() => startFromRoutine(r, custom)} style={styles.routine}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.routineName}>{r.name}</Text>
+                    <Text style={styles.routineMeta}>
+                      {r.exercises.length} exercícios
+                      {r.weekdays?.length ? ` · ${r.weekdays.map((d) => WEEKDAY_SHORT_PT[d]).join(', ')}` : ''}
+                    </Text>
+                  </View>
+                  <Text style={styles.play}>Iniciar</Text>
+                </Pressable>
+              ))}
+              <Input
+                label="Treino livre (nome)"
+                value={name}
+                onChangeText={setName}
+                placeholder="Ex: Peito e tríceps"
+                autoCapitalize="sentences"
+              />
+              <Button
+                title="Iniciar treino vazio"
+                onPress={() => {
+                  start(name);
+                  setName('');
+                }}
+              />
+              <View style={{ height: spacing.sm }} />
+              <Button title="Gerenciar rotinas" onPress={() => nav.navigate('Routines')} variant="ghost" />
+              <View style={{ height: spacing.sm }} />
+              <Button title="Biblioteca de exercícios" onPress={() => nav.navigate('Library')} variant="ghost" />
+              <View style={{ height: spacing.sm }} />
+              <Button title="Histórico de treinos" onPress={() => nav.navigate('Tabs', { screen: 'History' })} variant="ghost" />
+            </View>
+          )}
           <View style={{ height: spacing.xl }} />
         </ScrollView>
       </ScreenContainer>
@@ -153,6 +206,14 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  today: { backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, borderWidth: 1, borderColor: colors.primary },
+  todayTag: { color: colors.primary, fontSize: 12, fontWeight: '800', letterSpacing: 1 },
+  todayName: { color: colors.text, fontSize: 26, fontWeight: '800', marginTop: 4, marginBottom: spacing.sm },
+  todayEx: { color: colors.muted, fontSize: 14, lineHeight: 22 },
+  bigBtn: { height: 64, borderRadius: radius.md, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', marginTop: spacing.lg },
+  bigBtnText: { color: '#fff', fontSize: 20, fontWeight: '800' },
+  moreBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 60, marginTop: spacing.md },
+  moreText: { color: colors.text, fontSize: 16, fontWeight: '600' },
   section: { color: colors.text, fontSize: 18, fontWeight: '700', marginTop: spacing.xl, marginBottom: spacing.sm },
   empty: { color: colors.muted },
   routine: {

@@ -52,6 +52,7 @@ export default function RoutineEditScreen({ route, navigation }: Props) {
     routine ? [...routine.exercises].sort((a, b) => a.order - b.order) : []
   );
   const [picker, setPicker] = useState(false);
+  const [weekdays, setWeekdays] = useState<number[]>(routine?.weekdays ?? []);
   const [saving, setSaving] = useState(false);
 
   const add = (ex: Exercise) =>
@@ -91,6 +92,7 @@ export default function RoutineEditScreen({ route, navigation }: Props) {
         id: routine?.id,
         createdAt: routine?.createdAt,
         name: name.trim(),
+        weekdays: [...weekdays].sort(),
         exercises: items.map((e, i) => ({ ...e, order: i })),
       });
       navigation.goBack();
@@ -118,6 +120,21 @@ export default function RoutineEditScreen({ route, navigation }: Props) {
     <View style={styles.wrap}>
       <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Input label="Nome da rotina" value={name} onChangeText={setName} autoCapitalize="sentences" />
+        <Text style={styles.wdLabel}>Dias da semana (o treino do dia abre na aba Treino)</Text>
+        <View style={styles.wdRow}>
+          {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((l, i) => {
+            const on = weekdays.includes(i);
+            return (
+              <Pressable
+                key={i}
+                onPress={() => setWeekdays((w) => (w.includes(i) ? w.filter((x) => x !== i) : [...w, i]))}
+                style={[styles.wd, on && styles.wdOn]}
+              >
+                <Text style={[styles.wdText, on && { color: '#fff' }]}>{l}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
         {items.map((e, i) => (
           <View key={e.id} style={styles.card}>
             <View style={styles.head}>
@@ -191,6 +208,11 @@ const styles = StyleSheet.create({
   },
   head: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm },
   name: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  wdLabel: { color: colors.muted, fontSize: 13, marginBottom: spacing.sm },
+  wdRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
+  wd: { flex: 1, height: 48, borderRadius: radius.md, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  wdOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  wdText: { color: colors.text, fontWeight: '700' },
   meta: { color: colors.muted, fontSize: 13, marginTop: 2 },
   icon: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
   steppers: { flexDirection: 'row', gap: spacing.sm },
